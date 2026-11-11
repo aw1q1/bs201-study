@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BS201 · Lecture 1 — Range &amp; Standard Deviation</title>
+<style>
+/* ==========================================================
+   BS201 study pages — shared design system
+   ========================================================== */
+:root{
+  --bg:#0d1220; --card:#172038; --card2:#1d2848; --line:#2a3862;
+  --text:#eaf0ff; --muted:#9fb0d8;
+  --accent:#7aa8ff; --accent-rgb:122,168,255; --on-accent:#0a1226;
+  --ok:#4ade80; --ok-rgb:74,222,128;
+  --bad:#ff7b8c; --bad-rgb:255,123,140;
+  --warn:#fbbf24; --warn-rgb:251,191,36;
+  --c-plan:#4cc9f0; --c-plan-rgb:76,201,240;
+  --c-ana:#fbbf24;  --c-ana-rgb:251,191,36;
+  --c-des:#b69cff;  --c-des-rgb:182,156,255;
+  --c-imp:#4ade80;  --c-imp-rgb:74,222,128;
+  --shadow:0 12px 32px rgba(0,0,0,.35);
+  --radius:18px;
+}
+[data-theme="light"]{
+  --bg:#f5f2ea; --card:#ffffff; --card2:#f6f3ec; --line:#ddd6c3;
+  --text:#1b2336; --muted:#5a6684;
+  --accent:#2f66e0; --accent-rgb:47,102,224; --on-accent:#ffffff;
+  --ok:#15803d; --ok-rgb:21,128,61;
+  --bad:#c0263d; --bad-rgb:192,38,61;
+  --warn:#a85d00; --warn-rgb:168,93,0;
+  --c-plan:#0b84a8; --c-plan-rgb:11,132,168;
+  --c-ana:#b86e00;  --c-ana-rgb:184,110,0;
+  --c-des:#6b44e0;  --c-des-rgb:107,68,224;
+  --c-imp:#17803d;  --c-imp-rgb:23,128,61;
+  --shadow:0 10px 26px rgba(70,55,20,.12);
+}
+
+/* colour helpers: put on any element, children read --c / --c-rgb */
+.ph-plan{--c:var(--c-plan);--c-rgb:var(--c-plan-rgb)}
+.ph-ana{--c:var(--c-ana);--c-rgb:var(--c-ana-rgb)}
+.ph-des{--c:var(--c-des);--c-rgb:var(--c-des-rgb)}
+.ph-imp{--c:var(--c-imp);--c-rgb:var(--c-imp-rgb)}
+.t-ok{--c:var(--ok);--c-rgb:var(--ok-rgb)}
+.t-warn{--c:var(--warn);--c-rgb:var(--warn-rgb)}
+.t-bad{--c:var(--bad);--c-rgb:var(--bad-rgb)}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font:17px/1.85 "Segoe UI","Noto Sans Arabic",Tahoma,system-ui,sans-serif;
+  background:
+    radial-gradient(900px 480px at 85% -8%,rgba(var(--accent-rgb),.14),transparent 62%),
+    radial-gradient(700px 420px at 5% 14%,rgba(var(--c-des-rgb),.08),transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+}
+b,strong{font-weight:700}
+button{font-family:inherit}
+h2{font-size:32px;line-height:1.35;margin:0 0 6px}
+h3{font-size:20px;margin:0 0 10px}
+h4{font-size:17px;margin:0 0 8px}
+.sec{margin:30px 0 12px;font-size:21px}
+.sec small{color:var(--muted);font-weight:400;font-size:14px}
+.lead{color:var(--muted);margin:0 0 18px;font-size:18px}
+.muted{color:var(--muted)}
+.en{direction:ltr;unicode-bidi:isolate;font-family:"Segoe UI",system-ui,sans-serif;font-weight:600}
+.en.plain{font-weight:400}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;
+  padding:10px clamp(12px,3vw,28px);
+  background:var(--bg);
+  background:color-mix(in srgb,var(--bg) 84%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+}
+.home,.icon-btn{
+  width:40px;height:40px;display:grid;place-items:center;border-radius:12px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);
+  text-decoration:none;font-size:18px;cursor:pointer;flex:none;
+}
+.home:hover,.icon-btn:hover{border-color:var(--accent)}
+.ttl{display:flex;flex-direction:column;line-height:1.3}
+.ttl small{color:var(--muted);font-size:13px}
+.prog{margin-inline-start:auto;display:flex;align-items:center;gap:10px;min-width:150px;color:var(--muted);font-size:14px}
+.bar{flex:1;height:9px;border-radius:99px;background:rgba(var(--accent-rgb),.16);overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--c-imp));transition:width .5s}
+
+/* ---------- layout + nav ---------- */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:26px;max-width:1160px;margin:0 auto;padding:24px clamp(12px,3vw,24px) 70px;align-items:start}
+.nav{position:sticky;top:78px;display:flex;flex-direction:column;gap:6px}
+.nav button{
+  display:flex;align-items:center;gap:10px;text-align:start;width:100%;
+  background:transparent;border:1px solid transparent;color:var(--muted);
+  padding:9px 12px;border-radius:14px;cursor:pointer;font-size:15px;transition:.18s;
+}
+.nav button:hover{background:rgba(var(--accent-rgb),.08);color:var(--text)}
+.nav .num{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--card2);border:1px solid var(--line)}
+.nav .lbl{flex:1}
+.nav .tick{opacity:0;color:var(--ok);font-weight:800}
+.nav button.on{background:var(--card);border-color:var(--line);color:var(--text);box-shadow:var(--shadow)}
+.nav button.on .num{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.nav button.done .tick{opacity:1}
+
+/* ---------- stations ---------- */
+.station{display:none}
+.station.on{display:block;animation:rise .45s ease}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.station-foot{display:flex;justify-content:space-between;gap:12px;margin-top:34px;padding-top:18px;border-top:1px dashed var(--line)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin:16px 0}
+.card.tint{border-top:4px solid var(--c)}
+.card.tint h4{color:var(--c)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:14px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px;font-weight:600;
+  cursor:pointer;transition:.18s;text-decoration:none;
+}
+.btn:hover{transform:translateY(-1px);border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.btn.good{background:rgba(var(--ok-rgb),.16);border-color:rgba(var(--ok-rgb),.55)}
+.btn.bad{background:rgba(var(--bad-rgb),.14);border-color:rgba(var(--bad-rgb),.5)}
+.btn.ghost{background:transparent}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 14px;margin:4px;border-radius:999px;font-size:15px;line-height:1.7;
+  background:rgba(var(--c-rgb,var(--accent-rgb)),.14);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.45);
+}
+.chip.en{font-weight:600}
+.note{margin:14px 0;padding:12px 16px;border-radius:14px;background:rgba(var(--c-rgb,var(--accent-rgb)),.1);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.38)}
+.note.warn{--c-rgb:var(--warn-rgb)}
+.note.ok{--c-rgb:var(--ok-rgb)}
+.note.bad{--c-rgb:var(--bad-rgb)}
+
+/* ---------- tabs / panes / segmented ---------- */
+.pane{display:none}
+.pane.on{display:block;animation:rise .35s ease}
+.seg{display:inline-flex;gap:6px;padding:5px;border-radius:16px;background:var(--card2);border:1px solid var(--line);flex-wrap:wrap;margin-bottom:14px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:9px 18px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:.18s}
+.seg button.on{background:rgba(var(--c-rgb,var(--accent-rgb)),.2);color:var(--text);box-shadow:inset 0 0 0 1.5px rgba(var(--c-rgb,var(--accent-rgb)),.7)}
+
+/* ---------- big picture ---------- */
+.story{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+.beat{flex:1;min-width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:14px;border-radius:16px;background:rgba(var(--bad-rgb),.1);border:1px solid rgba(var(--bad-rgb),.4)}
+.beat.ok{background:rgba(var(--ok-rgb),.12);border-color:rgba(var(--ok-rgb),.5)}
+.beat .emo{font-size:30px;line-height:1.3}
+.arrow{align-self:center;font-size:22px;color:var(--muted)}
+.punch{text-align:center;font-size:20px;font-weight:700;margin:16px 0 12px}
+.tile{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;padding:18px;border-radius:18px;
+  border:1px solid rgba(var(--c-rgb),.45);background:linear-gradient(155deg,rgba(var(--c-rgb),.2),var(--card) 72%);
+  color:var(--text);cursor:pointer;transition:.2s;font-size:17px;
+}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.tile .emo{font-size:30px;line-height:1.3}
+.tile small{color:var(--muted);font-size:14.5px}
+
+/* ---------- translator diagram ---------- */
+.trans{display:flex;align-items:center;justify-content:center;gap:8px;direction:ltr;flex-wrap:wrap;margin-bottom:16px}
+.trans>*{direction:rtl}
+.tnode{
+  display:flex;flex-direction:column;align-items:center;gap:0;min-width:160px;padding:14px 18px;border-radius:18px;
+  border:1.5px solid rgba(var(--c-rgb),.4);background:rgba(var(--c-rgb),.1);color:var(--text);cursor:pointer;transition:.2s;font-size:16px;
+}
+.tnode .emo{font-size:30px;line-height:1.3}
+.tnode.on{background:rgba(var(--c-rgb),.24);border-color:var(--c);transform:translateY(-3px);box-shadow:0 8px 22px rgba(var(--c-rgb),.25)}
+.tlink{font-size:26px;color:var(--muted)}
+.bigq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.bigq .chip{font:800 20px/1.5 "Segoe UI",sans-serif;padding:6px 20px}
+
+/* ---------- flip cards (roles) ---------- */
+.flip{perspective:1000px;cursor:pointer;outline:none}
+.flip-in{display:grid;min-height:170px;transition:transform .55s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.flip.open .flip-in{transform:rotateY(180deg)}
+.flip .face{
+  grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;padding:16px 18px;
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px;
+  border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.5);
+  background:linear-gradient(155deg,rgba(var(--c-rgb,var(--accent-rgb)),.2),var(--card) 75%);
+}
+.flip .front .emo{font-size:32px;line-height:1.3}
+.flip .front b{font-size:18px}
+.flip .front small{color:var(--muted)}
+.flip .back{transform:rotateY(180deg);background:var(--card2);font-size:16px;line-height:1.75}
+.flip:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:18px}
+.hint{color:var(--muted);font-size:13px}
+
+/* ---------- SDLC path ---------- */
+.path{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;direction:ltr;margin:6px 0 18px}
+.node{
+  position:relative;direction:rtl;display:flex;flex-direction:column;align-items:center;gap:2px;padding:16px 10px;border-radius:20px;
+  border:1.5px solid rgba(var(--c-rgb),.4);background:rgba(var(--c-rgb),.09);color:var(--text);cursor:pointer;transition:.22s;text-align:center;font-size:15px;
+}
+.node i{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:800 24px/1 "Segoe UI",sans-serif;font-style:normal;background:rgba(var(--c-rgb),.25);color:var(--c);margin-bottom:4px;transition:.22s}
+.node b{font-size:18px;font-family:"Segoe UI",sans-serif}
+.node small{color:var(--muted);font-size:13.5px;line-height:1.4}
+.node:not(:last-child)::after{content:"➜";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+.node.on{background:rgba(var(--c-rgb),.22);border-color:var(--c);transform:translateY(-4px);box-shadow:0 12px 26px rgba(var(--c-rgb),.28)}
+.node.on i{background:var(--c);color:var(--bg)}
+.node b,.node small,.ph-head .q,.tile b.en{direction:ltr;unicode-bidi:isolate}
+.mnemo{text-align:center;font-size:19px;margin:0 0 14px;color:var(--muted)}
+.mnemo b{color:var(--text)}
+.panel{background:var(--card);border:1px solid rgba(var(--c-rgb),.5);border-top:5px solid var(--c);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow)}
+.ph-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ph-head .q{font:800 24px/1.3 "Segoe UI",sans-serif;color:var(--c);padding:4px 16px;border-radius:12px;background:rgba(var(--c-rgb),.15)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0}
+.steps li{counter-increment:s;position:relative;padding:6px 0;padding-inline-start:50px;margin:6px 0}
+.steps li::before{content:counter(s);position:absolute;inset-inline-start:0;top:6px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:rgba(var(--c-rgb),.2);color:var(--c)}
+.deliv{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+
+/* ---------- BPM ---------- */
+.cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;direction:ltr}
+.cycle>div{direction:rtl;padding:14px;border-radius:16px;background:var(--card2);border:1px solid var(--line);font-size:15.5px;line-height:1.65}
+.cycle .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:800;margin-bottom:6px}
+.loopnote{text-align:center;color:var(--muted);margin:10px 0 0}
+.range-wrap{direction:ltr;padding:6px 6px 0}
+.range-wrap input{width:100%;height:10px;accent-color:var(--accent);cursor:pointer}
+.ticks{display:flex;justify-content:space-between;direction:ltr;font:800 16px "Segoe UI",sans-serif;margin-top:8px}
+.ticks span{cursor:pointer;padding:4px 14px;border-radius:10px;color:var(--muted);transition:.18s}
+.ticks span.on{background:rgba(var(--c-rgb),.22);color:var(--text)}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:16px 0 8px}
+.metric small{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:4px}
+.meter{direction:ltr;position:relative;height:12px;border-radius:99px;background:linear-gradient(90deg,var(--ok),var(--warn),var(--bad));overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;right:0;width:100%;background:var(--card2);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- decks (games / quiz) ---------- */
+.deck{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px 22px;box-shadow:var(--shadow);margin:14px 0}
+.deck-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:var(--muted);font-size:15px}
+.cnt,.fc-count{direction:ltr;unicode-bidi:isolate}
+.deck-bar{flex:1;height:8px;border-radius:99px;background:rgba(var(--accent-rgb),.16);overflow:hidden}
+.deck-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--c-imp));transition:width .4s}
+.deck-q{font-size:21px;font-weight:600;line-height:1.7;margin:4px 0 16px;min-height:56px}
+.opts{display:grid;gap:10px}
+.opts.c2{grid-template-columns:repeat(2,1fr)}
+.opts.c3{grid-template-columns:repeat(3,1fr)}
+.opt{
+  text-align:start;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);
+  color:var(--text);font-size:17px;cursor:pointer;transition:.18s;line-height:1.6;
+}
+.opt.ph-plan,.opt.ph-ana,.opt.ph-des,.opt.ph-imp,.opt.t-ok,.opt.t-warn,.opt.t-bad{border-color:rgba(var(--c-rgb),.55);background:rgba(var(--c-rgb),.1);font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:rgba(var(--ok-rgb),.2)}
+.opt.wrong{border-color:var(--bad);background:rgba(var(--bad-rgb),.2)}
+.fb{margin-top:16px;padding:14px 16px;border-radius:14px;animation:rise .3s ease}
+.fb.ok{background:rgba(var(--ok-rgb),.13);border:1px solid rgba(var(--ok-rgb),.5)}
+.fb.no{background:rgba(var(--bad-rgb),.12);border:1px solid rgba(var(--bad-rgb),.5)}
+.fb .btn{margin-top:10px}
+.deck-end{text-align:center;padding:12px 0}
+.deck-end .big{font:800 56px/1.2 "Segoe UI",sans-serif;color:var(--accent)}
+
+/* ---------- flashcards ---------- */
+.fc{background:transparent}
+.fc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.fc-top .seg{margin:0}
+.fc-card{perspective:1200px;cursor:pointer;outline:none;margin:10px 0 14px}
+.fc-in{display:grid;min-height:270px;transition:transform .6s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.fc-card.open .fc-in{transform:rotateY(180deg)}
+.fc-in .face{
+  grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:24px;padding:28px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;
+  border:1px solid var(--line);font-size:23px;line-height:1.7;box-shadow:var(--shadow);
+}
+.fc-in .front{background:linear-gradient(160deg,rgba(var(--accent-rgb),.22),var(--card))}
+.fc-in .back{background:linear-gradient(160deg,rgba(var(--ok-rgb),.18),var(--card));transform:rotateY(180deg);font-size:19.5px}
+.fc-in small{color:var(--muted);font-size:13.5px}
+.fc-card:focus-visible .fc-in .front{outline:2px solid var(--accent)}
+.fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.fc-stat{text-align:center;margin:8px 0 0}
+
+/* ---------- essay ---------- */
+.essay textarea{width:100%;min-height:110px;resize:vertical;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:16px/1.7 "Segoe UI",sans-serif;margin:8px 0 12px}
+.essay textarea:focus{outline:none;border-color:var(--accent)}
+.model{margin-top:14px;animation:rise .3s ease}
+.mdl{padding:14px 16px;border-radius:14px;background:rgba(var(--ok-rgb),.1);border:1px solid rgba(var(--ok-rgb),.4);margin-bottom:12px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.chk input{width:20px;height:20px;margin-top:5px;accent-color:var(--ok);flex:none}
+.pts-sc{font-weight:700;margin-top:6px;color:var(--ok)}
+
+/* ---------- tables (summary) ---------- */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line);font-size:15.5px;line-height:1.65;margin:8px 0 18px}
+.tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl th{background:var(--card2);font-size:14.5px;color:var(--muted)}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.tbl .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:8px}
+
+/* ---------- calculators / inputs ---------- */
+.calc-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.calc-top label{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.calc input[type=number]{width:100%;max-width:132px;padding:7px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:600 16px "Segoe UI",sans-serif;direction:ltr;text-align:right}
+.calc input[type=number]:focus{outline:none;border-color:var(--accent)}
+.calc-top input[type=number]{max-width:90px}
+.calc input[type=range]{accent-color:var(--accent);cursor:pointer;direction:ltr;width:170px}
+main{min-width:0}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0;direction:ltr}
+.ctbl{min-width:680px;direction:ltr;margin:0}
+.ctbl th,.ctbl td{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ctbl th:first-child,.ctbl td:first-child{text-align:left}
+.ctbl input[type=number]{min-width:112px}
+.tbl.ctbl td:first-child{white-space:nowrap}
+.ctbl.sm{min-width:0}
+.ctbl.sm input[type=number]{min-width:0}
+.ctbl.sm th,.ctbl.sm td{white-space:normal}
+.tbl.ctbl.sm td:first-child{white-space:nowrap}
+.ctbl .neg{color:var(--bad)}
+.ctbl .pos{color:var(--ok)}
+.ctbl tr.tot td{background:var(--card2);font-weight:700}
+.res-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:12px;margin-top:14px}
+.res{padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+.res small{display:block;color:var(--muted);font-size:14px}
+.res b{display:block;font:800 22px/1.5 "Segoe UI",sans-serif;direction:ltr;unicode-bidi:isolate;text-align:start}
+.res.pos{border-color:rgba(var(--ok-rgb),.6);background:rgba(var(--ok-rgb),.12)}
+.res.neg{border-color:rgba(var(--bad-rgb),.6);background:rgba(var(--bad-rgb),.12)}
+.verdict{margin-top:14px;padding:12px 16px;border-radius:14px;font-weight:700;font-size:18px;background:var(--card2);border:1px solid var(--line)}
+.verdict.pos{background:rgba(var(--ok-rgb),.14);border-color:rgba(var(--ok-rgb),.55)}
+.verdict.neg{background:rgba(var(--bad-rgb),.13);border-color:rgba(var(--bad-rgb),.55)}
+.checks{display:grid;gap:4px;margin-bottom:10px}
+.checks .chk{padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);margin:0}
+.checks .chk:hover{border-color:var(--accent)}
+.formula{direction:ltr;unicode-bidi:isolate;text-align:center;font:700 19px/1.9 "Segoe UI",sans-serif;padding:12px 16px;border-radius:14px;background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.4);margin:12px 0}
+.formula small{display:block;font:400 14px "Segoe UI",sans-serif;color:var(--muted)}
+
+/* ---------- share disclaimer (footer injected by core.js) ---------- */
+.disclaimer{max-width:1160px;margin:0 auto;padding:0 clamp(12px,3vw,24px) 46px}
+.disclaimer>div{padding:14px 18px;border-radius:16px;border:1px solid rgba(var(--warn-rgb),.5);background:rgba(var(--warn-rgb),.08);font-size:14.5px;line-height:1.85;color:var(--muted)}
+.disclaimer b{color:var(--text)}
+.disclaimer .d-en{direction:ltr;text-align:left;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(var(--warn-rgb),.4);font-family:"Segoe UI",system-ui,sans-serif;font-size:13.5px;line-height:1.7}
+
+
+/* ---------- BS201 additions: math bits, strip, proof, text inputs ---------- */
+.nb{white-space:nowrap}
+.ov{text-decoration:overline;font-style:normal}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 5px;line-height:1.45}
+.fr>span:first-child{border-bottom:2px solid currentColor;padding:0 6px}
+.fr>span:last-child{padding:0 6px}
+.calc input[type=text]{width:100%;max-width:420px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:600 16px "Segoe UI",sans-serif;direction:ltr;text-align:left}
+.calc input[type=text]:focus{outline:none;border-color:var(--accent)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.presets .btn{padding:5px 12px;font-size:14px;border-radius:12px}
+.strip{width:100%;height:auto;display:block;direction:ltr}
+.strip .ax{stroke:var(--line);stroke-width:2}
+.strip .tk{fill:var(--muted);font:12px "Segoe UI",sans-serif;text-anchor:middle}
+.strip .rg{stroke:var(--c,var(--accent));stroke-width:2.5}
+.strip .rgt{fill:var(--c,var(--accent));font:800 14px "Segoe UI",sans-serif;text-anchor:middle}
+.strip .mn{stroke:var(--warn);stroke-dasharray:4 3;stroke-width:2}
+.strip .mnt{fill:var(--warn);font:700 13px "Segoe UI",sans-serif;text-anchor:middle}
+.strip circle{fill:var(--c,var(--accent));stroke:var(--bg);stroke-width:2}
+.strip-row{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;margin:6px 0}
+.strip-row>b{font-size:15px}
+.proof{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.proof .ps{display:none;gap:12px;align-items:flex-start;padding:10px 12px;margin:8px 0;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+.proof .ps.on{display:flex;animation:rise .35s ease}
+.proof .pn{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 14px "Segoe UI",sans-serif;background:rgba(var(--accent-rgb),.2);color:var(--accent)}
+.proof .pb{flex:1;min-width:0}
+.proof .pb .formula{margin:2px 0}
+.proof .pwhy{color:var(--muted);font-size:15px;margin-top:4px}
+.proof-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.sl-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.sl-row input[type=range]{flex:1;min-width:180px;max-width:420px;width:auto}
+.sl-row b.en{min-width:54px;display:inline-block;text-align:center}
+.tbl .num{text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:0 10px;border-radius:99px;background:rgba(var(--c-rgb,var(--accent-rgb)),.18);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.5);font:700 13px "Segoe UI",sans-serif}
+
+
+/* ---------- order-the-steps game ---------- */
+.order{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.order .o-head{margin-bottom:8px}
+.order .o-ans{list-style:decimal;padding-inline-start:30px;margin:8px 0}
+.order .o-ans li{margin:6px 0;padding:8px 12px;border-radius:12px;background:rgba(var(--ok-rgb),.12);border:1px solid rgba(var(--ok-rgb),.5);font-family:"Segoe UI",sans-serif;font-weight:600;direction:ltr;text-align:left}
+.order .o-pool{display:grid;gap:8px;margin:10px 0}
+.order .o-btn{text-align:left;direction:ltr;font-family:"Segoe UI",sans-serif;font-weight:600}
+.order .o-btn.wrong{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.order .o-msg{min-height:26px;margin:6px 0;color:var(--muted);font-weight:600}
+.order .o-msg.good{color:var(--ok)}
+.order .o-msg.bad{color:var(--bad)}
+.venn{width:100%;max-width:420px;height:auto;display:block;margin:8px auto;direction:ltr}
+.venn .box{fill:none;stroke:var(--line);stroke-width:2}
+.venn .lbl{fill:var(--text);font:700 15px "Segoe UI",sans-serif;text-anchor:middle}
+.venn .sm{fill:var(--muted);font:600 12.5px "Segoe UI",sans-serif;text-anchor:middle}
+.venn .ca{fill:rgba(var(--c-plan-rgb),.28);stroke:var(--c-plan);stroke-width:2.5}
+.venn .cb{fill:rgba(var(--c-ana-rgb),.22);stroke:var(--c-ana);stroke-width:2.5}
+.venn .ci{fill:rgba(var(--c-imp-rgb),.45)}
+.venn .cc{fill:rgba(var(--c-des-rgb),.35)}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:12px;padding-top:12px}
+  .nav{position:sticky;top:60px;z-index:20;flex-direction:row;overflow-x:auto;gap:6px;padding:8px 2px;background:var(--bg)}
+  .nav{scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{width:auto;flex:none;padding:6px 10px}
+  .nav button:not(.on) .lbl{display:none}
+  .nav .tick{display:none}
+  .nav button.done .num{background:var(--ok);color:#06210f;border-color:transparent}
+  .ttl small{display:none}
+}
+@media (max-width:700px){
+  body{font-size:16px}
+  h2{font-size:26px}
+  .path{grid-template-columns:repeat(2,1fr);gap:12px}
+  .node::after{display:none!important}
+  .cycle{grid-template-columns:repeat(2,1fr)}
+  .opts.c3{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr}
+  .prog{min-width:0}
+  .tbl{font-size:14px}
+  .tbl th,.tbl td{padding:8px 7px}
+  .tbl td:first-child{white-space:normal}
+  .prog .bar{min-width:50px}
+  .card.calc{padding:16px 10px}
+  .calc input[type=number]{padding:6px 4px;font-size:15px}
+  .ctbl.sm th,.ctbl.sm td{padding:8px 4px}
+}
+@media (max-width:700px){
+  .strip-row{grid-template-columns:1fr;gap:0}
+  .strip-row>b{margin-bottom:-4px}
+  .proof{padding:12px 10px}
+  .sl-row input[type=range]{min-width:140px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ---------- print: only the summary station ---------- */
+@media print{
+  :root,[data-theme="dark"],[data-theme="light"]{--bg:#fff;--card:#fff;--card2:#f3f3f3;--line:#ccc;--text:#111;--muted:#444;--shadow:none}
+  body{background:#fff!important;font-size:12pt;line-height:1.55}
+  .topbar,.nav,.station-foot,.noprint{display:none!important}
+  .layout{display:block;padding:0}
+  .station{display:none!important}
+  .station.summary{display:block!important}
+  .card,.panel{box-shadow:none;break-inside:avoid}
+  .tbl{break-inside:avoid}
+}
+
+</style>
+</head>
+<body data-lecture="l1">
+
+<header class="topbar">
+  <a class="home" href="index.html" title="القائمة الرئيسية">🏠</a>
+  <div class="ttl"><b>BS201 · Lecture 1</b><small class="en plain">Measures of Dispersion — Range &amp; Standard Deviation</small></div>
+  <div class="prog"><div class="bar"><i id="progBar"></i></div><span id="progTxt">0/10</span></div>
+  <button id="themeBtn" class="icon-btn" type="button" title="فاتح / داكن">☀️</button>
+</header>
+
+<div class="layout">
+<nav class="nav" id="nav" aria-label="محطات المحاضرة"></nav>
+<main>
+
+<!-- =====================================================  0 · BIG PICTURE -->
+<section class="station" data-icon="🗺️" data-title="الصورة الكبيرة">
+  <h2>الصورة الكبيرة 🗺️</h2>
+  <p class="lead">الـ <span class="en">mean</span> لوحده بيكدّب علينا. الشابتر ده بيعلّمنا نقيس <b>القيم متفرقة قد إيه</b> — اسمه <span class="en">Dispersion</span> (التشتت).</p>
+
+  <div class="card">
+    <div class="story">
+      <div class="beat ok"><div class="emo">📊</div><b>نفس الـ <span class="en">mean</span></b><span>درجات الإحصاء والرياضيات: متوسط الاتنين <span class="en">70</span></span></div>
+      <div class="arrow">⬅</div>
+      <div class="beat"><div class="emo">🤔</div><b>بس المستوى مش واحد!</b><span>الإحصاء متقاربة، والرياضيات مبعثرة</span></div>
+      <div class="arrow">⬅</div>
+      <div class="beat ok"><div class="emo">📏</div><b>الحل</b><span>نضيف مقياس <span class="en">dispersion</span> جنب الـ <span class="en">mean</span></span></div>
+    </div>
+    <p class="punch">نفس المتوسط... وحكايتين مختلفتين خالص 😅</p>
+    <div class="strip-row ph-plan"><b class="en">Statistics</b><div id="stA"></div></div>
+    <div class="strip-row ph-des"><b class="en">Mathematics</b><div id="stB"></div></div>
+    <div class="note warn">📖 <b>تنبيه:</b> الكتاب والسلايد كاتبين <span class="en nb">R = 78 − 66 = 12</span> للإحصاء، لكن أقل درجة في القائمة <b class="en">63</b> فالـ <span class="en">Range</span> الصح <b class="en">15</b> (بالظبط زي ما الرسم بيبيّن). الرياضيات: <span class="en nb">96 − 41 = 55</span>. الفكرة واحدة: الرياضيات أكتر تشتتاً بكتير.</div>
+  </div>
+
+  <h3 class="sec">خريطة المحاضرة <small>(اضغط على أي مربع تروحله)</small></h3>
+  <div class="grid g4">
+    <button type="button" class="tile ph-plan" data-go="2"><span class="emo">🎚️</span><b>ليه التشتت؟</b><small>القواعد والمقارنة</small></button>
+    <button type="button" class="tile ph-plan" data-go="3"><span class="emo">📏</span><b class="en">Range</b><small>أسهل مقياس</small></button>
+    <button type="button" class="tile ph-ana" data-go="4"><span class="emo">📐</span><b class="en">Variance &amp; SD</b><small>أهم مقياس ⭐</small></button>
+    <button type="button" class="tile ph-des" data-go="5"><span class="emo">🧮</span><b>إزاي أحل</b><small>حاسبة + حل خطوة بخطوة</small></button>
+    <button type="button" class="tile ph-imp" data-go="6"><span class="emo">🧪</span><b>خواص + <span class="en">Proof</span></b><small>مميزات وعيوب وإثبات</small></button>
+  </div>
+
+  <div class="note">📌 <b>الامتحان:</b> ٨ <span class="en">True/False</span> (٤ درجات) + ٨ <span class="en">MCQ</span> (٨ درجات) + <span class="en">Essay</span> (٨ درجات) = ٢٠. الدكتور قال ممكن ييجي <b class="en">Proof</b>، وفي أسئلة <b>نظرية</b> على <span class="en">Range / Variance / SD</span>. يعني ماتذاكرش حسابات بس.</div>
+  <div class="note ok">💡 <b>طريقة المذاكرة:</b> اقرأ المحطة، جرّب العنصر التفاعلي، العب اللعبة. لو غلطت ارجع للمحطة من القائمة اللي على الجنب.</div>
+</section>
+
+<!-- =====================================================  1 · WHY DISPERSION -->
+<section class="station" data-icon="🎚️" data-title="ليه التشتت؟">
+  <h2>ليه التشتت؟ 🎚️</h2>
+  <p class="lead">الـ <span class="en">mean</span> بيقولك «فين النص»، لكن مش بيقولك «القيم قريبة منه ولا بعيدة». حرّك السلايدر: الـ <span class="en">mean</span> ثابت وهيفضل <span class="en">70</span>.</p>
+
+  <div class="card calc ph-ana">
+    <div class="sl-row"><b>درجة التشتت:</b><input type="range" id="spRange" min="0.5" max="7" step="0.5" value="1" aria-label="spread"><b class="en" id="spK">×1</b></div>
+    <div id="spStrip"></div>
+    <div class="res-row">
+      <div class="res"><small>الـ <span class="en">mean</span></small><b id="spM">70</b></div>
+      <div class="res"><small>الـ <span class="en">Range</span></small><b id="spR"></b></div>
+      <div class="res"><small>الـ <span class="en">SD</span> (<span class="en">S</span>)</small><b id="spS"></b></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0">لاحظ: كل ما القيم تبعد عن بعض، الـ <span class="en">Range</span> والـ <span class="en">SD</span> بيكبروا، والـ <span class="en">mean</span> ما بيتحركش. (القيم الأصلية: 66, 68, 70, 72, 74)</p>
+  </div>
+
+  <h3 class="sec">مقاييس التشتت اللي الكتاب ذكرها <small>(اقلب الكارت)</small></h3>
+  <div class="grid g3">
+    <div class="flip ph-plan"><div class="f"><span class="emo">📏</span><b class="en">Range</b><small>المدى ⭐</small></div><div class="b">أكبر قيمة − أصغر قيمة. أبسط مقياس. <b>هنذاكره.</b></div></div>
+    <div class="flip ph-ana"><div class="f"><span class="emo">📐</span><b class="en">Variance &amp; SD</b><small>التباين والانحراف المعياري ⭐</small></div><div class="b">أهم وأكتر مقياس استخداماً. <b>هنذاكره.</b></div></div>
+    <div class="flip ph-des"><div class="f"><span class="emo">↔️</span><b class="en">Half interquartile range</b><small>نصف المدى الربيعي</small></div><div class="b">بيعتمد على <b>ترتيب</b> البيانات، فيفيد لما يبقى فيه <span class="en">outliers</span>.</div></div>
+    <div class="flip ph-imp"><div class="f"><span class="emo">➖</span><b class="en">Mean deviation</b><small>الانحراف المتوسط</small></div><div class="b">مقياس مطلق تاني من نفس العيلة. مجرد ذكر في الكتاب.</div></div>
+    <div class="flip"><div class="f"><span class="emo">🏷️</span><b class="en">Index of dispersion</b><small>للبيانات الوصفية (descriptive)</small></div><div class="b">للبيانات اللي مش أرقام (وصفية). مجرد ذكر في الكتاب.</div></div>
+  </div>
+  <div class="note">🎯 الكتاب بيقول: «هنركز على المقاييس الشائعة الاستخدام» = <b class="en">Range</b> و<b class="en">Variance / SD</b>. الباقي اعرف اسمه بس.</div>
+
+  <h3 class="sec">3 قواعد أساسية لمقاييس التشتت <small>(نظري — بيجي T/F)</small></h3>
+  <div class="grid g3">
+    <div class="card tint ph-plan" style="margin:0"><h4>① قيمتها</h4><p style="margin:0">كل مقاييس التشتت <b>موجبة أو = صفر</b>. وبتساوي <b>صفر</b> لو كل القيم متساوية (مفيش تشتت أصلاً).</p></div>
+    <div class="card tint ph-ana" style="margin:0"><h4>② <span class="en">Absolute</span> measures</h4><p style="margin:0"><span class="en">Range / half-IQR / mean deviation / SD</span> اسمها <b>مقاييس تشتت مطلق</b> لأنها بنفس <b>وحدة</b> الظاهرة. وللمقارنة بيها لازم <b>الشرطين مع بعض:</b> نفس الـ <span class="en">mean</span> ونفس <b>الوحدة</b>.</p></div>
+    <div class="card tint ph-des" style="margin:0"><h4>③ القيم المتطرفة</h4><p style="margin:0">لو فيه <span class="en">outliers</span> نستخدم <b>الانحراف الربيعي</b> بدل الـ <span class="en">Range</span> والـ <span class="en">SD</span>، لأنه بيعتمد على <b>ترتيب</b> البيانات مش على القيم نفسها.</p></div>
+  </div>
+
+  <h3 class="sec">🎯 لعبة: نقدر نقارن التشتت بالمقاييس المطلقة؟</h3>
+  <div data-deck="cmp"></div>
+</section>
+
+<!-- =====================================================  2 · RANGE -->
+<section class="station" data-icon="📏" data-title="الـ Range">
+  <h2>الـ <span class="en">Range</span> 📏</h2>
+  <p class="lead">أبسط مقياس تشتت: بيقولك «أبعد قيمتين بعد بعض قد إيه». رمزه <b class="en">R</b>.</p>
+
+  <div class="card" data-tabs="u">
+    <div class="seg ph-plan">
+      <button type="button" data-tab="u">بيانات عادية (غير مبوبة)</button>
+      <button type="button" data-tab="g">بيانات مبوبة (فئات)</button>
+    </div>
+    <div class="pane" data-pane="u">
+      <div class="formula">R = Largest value − Smallest value</div>
+      <p class="muted" style="margin:0 0 8px">مثال <span class="en">1.2.1</span>: أعمار <span class="en">58, 69, 51, 57, 49, 60</span> ← <span class="en">R = 69 − 49 = <b>20</b></span></p>
+      <p class="muted" style="margin:0">(في جدول تكراري لقيم منفردة: برضه أكبر قيمة − أصغر قيمة.)</p>
+    </div>
+    <div class="pane" data-pane="g">
+      <div class="formula">R = Upper limit of the LAST class − Lower limit of the FIRST class</div>
+      <p style="margin:0 0 8px">مثال <span class="en">1.2.5</span>: فئات <span class="en">10−, 18−, 26−, 34−, 42−, 50−58</span> ← <span class="en">R = 58 − 10 = <b>48</b></span></p>
+      <p style="margin:0">مثال <span class="en">1.2.6</span>: أسعار <span class="en">500−, 520−, …, 600−620</span> ← <span class="en">R = 620 − 500 = <b>120</b></span> جنيه.</p>
+      <div class="note warn">📖 جملة الحل في مثال <span class="en">1.2.6</span> مكتوب فيها كلمة «<span class="en">center</span>» (مركز)، لكن الحساب <span class="en">620 − 500</span> هو <b>حدود الفئات</b> زي التعريف. اشتغل بالتعريف: <b>حدود</b> مش مراكز.</div>
+    </div>
+  </div>
+
+  <h3 class="sec">🧪 جرّب: الـ <span class="en">Range</span> والقيمة الشاذة</h3>
+  <div class="card calc ph-plan">
+    <div class="calc-top"><label>البيانات: <input type="text" id="rgIn" value="20, 22, 24, 21, 25, 26, 25, 39" dir="ltr"></label>
+      <label class="chk" style="padding:0"><input type="checkbox" id="rgDrop"> <span>استبعد أكبر قيمة (الشاذة)</span></label></div>
+    <div id="rgStrip"></div>
+    <div class="res-row"><div class="res"><small>أكبر − أصغر</small><b id="rgCalc"></b></div><div class="res"><small>الـ <span class="en">Range</span></small><b id="rgOut"></b></div></div>
+    <p class="muted" style="margin:10px 0 0">مثال <span class="en">1.2.2</span>: بالقيمة <b class="en">39</b> الـ <span class="en">R = 19</span>، وبدونها <span class="en">R = 26 − 20 = 6</span>. قيمة واحدة غيّرت الصورة كلها ← عيب الـ <span class="en">Range</span>.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="card tint t-ok" style="margin:0"><h4>✅ المميزات</h4><span class="chip">سهل الحساب جبرياً</span><span class="chip">يدّي فكرة سريعة عن التفاوت</span></div>
+    <div class="card tint t-bad" style="margin:0"><h4>❌ العيوب</h4><span class="chip">بيدخل فيه <b>قيمتين بس</b> (أكبر وأصغر) وممكن يكونوا متطرفين</span><span class="chip">صعب/مستحيل للبيانات <b>الوصفية</b> والجداول التكرارية <b>المفتوحة</b></span><span class="chip">بيتأثر بالقيم الشاذة</span></div>
+  </div>
+
+  <h3 class="sec">🪤 فخ: نفس الـ <span class="en">Range</span> بس القيم مش نفس الشكل <small>(مثال 1.2.4)</small></h3>
+  <div class="card">
+    <div class="strip-row ph-plan"><b class="en">Company 1</b><div id="coA"></div></div>
+    <div class="strip-row ph-des"><b class="en">Company 2</b><div id="coB"></div></div>
+    <p style="margin:6px 0 0">الاتنين <span class="en">R = 76 − 66 = 10</span>، لكن القيم متوزعة مختلف. عشان كده الكتاب بيقول: الأفضل نستخدم <b class="en">SD</b> لأن <b>كل</b> القيم بتدخل في حسابه. <span class="muted">(الـ <span class="en">SD</span> بتاعهم حسبتها أنا بالكود: <span class="en">3.43</span> و<span class="en">3.25</span>.)</span></p>
+  </div>
+  <div class="note">🧠 مثال <span class="en">1.2.3</span> (<span class="en">IQ</span>): نفس الـ <span class="en">mean = 105</span>، المجموعة الأولى <span class="en">R = 115−95 = 20</span> والتانية <span class="en">R = 135−75 = 60</span> (ثلاث أمثال) ← الأولى <b>أكتر تجانساً</b> (<span class="en">homogeneous</span>).</div>
+
+  <h3 class="sec">🎯 تدريب سريع</h3>
+  <div data-deck="rangeDrill"></div>
+</section>
+
+<!-- =====================================================  3 · VARIANCE & SD -->
+<section class="station" data-icon="📐" data-title="Variance و SD ⭐">
+  <h2><span class="en">Variance</span> و <span class="en">Standard Deviation</span> ⭐</h2>
+  <p class="lead">أهم مقياس في الشابتر. الفكرة: نحسب <b>متوسط مربعات بعد كل قيمة عن الـ <span class="en">mean</span></b>.</p>
+
+  <div class="card" data-tabs="pop">
+    <div class="seg ph-ana">
+      <button type="button" data-tab="pop">المجتمع <span class="en">Population</span></button>
+      <button type="button" data-tab="sam">العينة <span class="en">Sample</span></button>
+    </div>
+    <div class="pane" data-pane="pop">
+      <div class="formula"><span class="en">σ² = <span class="fr"><span>Σ (x<sub>i</sub> − μ)²</span><span>N</span></span> &nbsp;&nbsp; σ = √σ²</span></div>
+      <p style="margin:0">التباين = <b>متوسط</b> مربعات انحرافات القيم عن <span class="en">μ</span> (بنقسم على <b class="en">N</b>). والـ <span class="en">SD</span> هو الجذر التربيعي الموجب للتباين.</p>
+    </div>
+    <div class="pane" data-pane="sam">
+      <div class="formula"><span class="en">S² = <span class="fr"><span>Σ (x<sub>i</sub> − <i class="ov">x</i>)²</span><span>n − 1</span></span> &nbsp;&nbsp; S = √S²</span></div>
+      <p style="margin:0">التباين = <b>مجموع</b> مربعات الانحرافات عن <span class="en"><i class="ov">x</i></span> مقسوم على <b class="en">(n − 1)</b>. والـ <span class="en">SD</span> هو الجذر التربيعي الموجب.</p>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th></th><th>المجتمع</th><th>العينة</th></tr>
+    <tr><td>الـ mean</td><td class="en">μ</td><td class="en"><i class="ov">x</i></td></tr>
+    <tr><td>التباين</td><td class="en">σ² (sigma squared)</td><td class="en">S²</td></tr>
+    <tr><td>الانحراف المعياري</td><td class="en">σ (sigma)</td><td class="en">S</td></tr>
+    <tr><td>بنقسم على</td><td class="en">N</td><td class="en">n − 1</td></tr>
+  </table>
+
+  <div class="note warn">🔑 <b>إزاي أعرف أستخدم أنهي قانون؟</b> اقرأ الكلمات: «<span class="en">sample</span> / عينة» ← <span class="en">÷(n−1)</span>. «كل المجتمع / <span class="en">population</span> / يمثلوا المجتمع ككل» ← <span class="en">÷N</span> (زي مثال <span class="en">1.3.4</span>).</div>
+
+  <h3 class="sec">ليه الجذر؟ وليه التربيع؟</h3>
+  <div class="grid g2">
+    <div class="card tint ph-ana" style="margin:0"><h4>① الوحدة</h4><p style="margin:0">لو القراءات بالجنيه، وحدة التباين <b class="en">(pound)²</b>. المقياس لازم يبقى بنفس وحدة البيانات، فنجذره ونطلع الـ <span class="en">SD</span> بنفس الوحدة. عشان كده الـ <span class="en">SD</span> أكتر استخداماً.</p></div>
+    <div class="card tint ph-des" style="margin:0"><h4>② التربيع</h4><p style="margin:0">مجموع الانحرافات عن الـ <span class="en">mean</span> دايماً <b>= صفر</b>. فنربّعهم: مهمنا <b>المسافة</b> مش إذا كانت القيمة أكبر ولا أصغر.</p></div>
+  </div>
+
+  <h3 class="sec">🎯 لعبة 1: <span class="en">Variance</span> ولا <span class="en">SD</span>؟</h3>
+  <div data-deck="varsd"></div>
+
+  <h3 class="sec">🎯 لعبة 2: ÷<span class="en">N</span> ولا ÷<span class="en">(n−1)</span>؟</h3>
+  <div data-deck="popsam"></div>
+</section>
+
+<!-- =====================================================  4 · HOW TO SOLVE (LAB) -->
+<section class="station" data-icon="🧮" data-title="إزاي أحل">
+  <h2>إزاي أحل؟ 🧮</h2>
+  <p class="lead">الطريقة اللي الكتاب بيحل بيها: جدول من <b>4 أعمدة</b>. اتبعها في الامتحان بالظبط.</p>
+
+  <ol class="steps ph-ana">
+    <li>احسب الـ <span class="en">mean</span>: <span class="en"><i class="ov">x</i> = Σx / n</span></li>
+    <li>اعمل جدول: <span class="en">x<sub>i</sub></span> | <span class="en">x<sub>i</sub> − <i class="ov">x</i></span> | <span class="en">(x<sub>i</sub> − <i class="ov">x</i>)²</span></li>
+    <li>اجمع عمود الانحرافات (<b>لازم يطلع صفر</b> ← اختبار لحسابك) واجمع عمود المربعات</li>
+    <li>اقسم مجموع المربعات على <b class="en">(n − 1)</b> للعينة أو <b class="en">N</b> للمجتمع ← ده التباين</li>
+    <li>جذّر التباين ← ده الـ <span class="en">SD</span></li>
+  </ol>
+
+  <h3 class="sec">🧪 الحاسبة <small>(اكتب أي أرقام أو جرّب أمثلة الكتاب)</small></h3>
+  <div class="card calc ph-ana">
+    <div class="calc-top">
+      <label>البيانات: <input type="text" id="labIn" value="40, 44, 28, 36, 32" dir="ltr"></label>
+      <div class="seg" id="labSeg" style="margin:0"><button type="button" data-k="s" class="on">عينة ÷(n−1)</button><button type="button" data-k="p">مجتمع ÷N</button></div>
+    </div>
+    <div class="presets" id="labPre">
+      <button type="button" class="btn" data-v="40,44,28,36,32" data-k="s">مثال 1.3.1</button>
+      <button type="button" class="btn" data-v="5,6,2,8,9,12" data-k="s">مثال 1.3.2</button>
+      <button type="button" class="btn" data-v="55,56,56,60,60,61" data-k="s">1.3.3 — مجموعة 1</button>
+      <button type="button" class="btn" data-v="25,37,40,77,81,88" data-k="s">1.3.3 — مجموعة 2</button>
+      <button type="button" class="btn" data-v="30,50,55,60,65,70,70,80" data-k="p">مثال 1.3.4 (مجتمع)</button>
+    </div>
+    <div class="tscroll"><table class="tbl ctbl sm" id="labTbl"></table></div>
+    <div class="res-row" id="labRes"></div>
+    <div class="verdict" id="labV"></div>
+  </div>
+
+  <div class="note ok">🔎 <b>مثال 1.3.3 (مهم):</b> المجموعتين <span class="en">mean = 58</span> بالظبط. الأولى <span class="en">S² = 6.8</span> (<span class="en">S = 2.608</span>)، والتانية <span class="en">S² = 728.8</span> (<span class="en">S = 26.996</span>). نفس المتوسط وتشتت مختلف جداً ← الـ <span class="en">SD</span> هو اللي بيكشف الفرق.</div>
+
+  <div class="note">🗒️ <b>في الورقة:</b> ارسم الجدول، اكتب القانون، عوّض بالأرقام، وانتبه للوحدة. ولو السؤال بيقول «عينة» أو «المجتمع ككل» اكتبها صراحة.</div>
+</section>
+
+<!-- =====================================================  5 · PROPERTIES + PROOF -->
+<section class="station" data-icon="🧪" data-title="خواص + Proof">
+  <h2>الخواص والـ <span class="en">Proof</span> 🧪</h2>
+  <p class="lead">الدكتور قال ممكن ييجي <span class="en">Proof</span> ونظري على الـ <span class="en">SD</span>. دي أهم الحاجات النظرية.</p>
+
+  <h3 class="sec">مميزات وعيوب الـ <span class="en">SD</span></h3>
+  <div class="grid g2">
+    <div class="card tint t-ok" style="margin:0"><h4>✅ المميزات</h4><span class="chip">سهل الحساب جبرياً</span><span class="chip">من أدق المقاييس لأن <b>كل</b> القيم داخلة في حسابه</span><span class="chip">له <b>نفس وحدة</b> الظاهرة</span></div>
+    <div class="card tint t-bad" style="margin:0"><h4>❌ العيوب</h4><span class="chip">بيتأثر بالقيم المتطرفة (<span class="en">outliers</span>)</span><span class="chip">مش ممكن للبيانات <b>الوصفية</b></span><span class="chip">صعب للجداول التكرارية <b>المفتوحة</b></span></div>
+  </div>
+
+  <h3 class="sec">🧪 جرّب: الـ <span class="en">Outlier</span> بيأثر على الـ <span class="en">Range</span> والـ <span class="en">SD</span></h3>
+  <div class="card calc ph-des">
+    <p style="margin:0 0 6px">بيانات مثال <span class="en">1.2.2</span>: <span class="en">20, 22, 24, 21, 25, 26, 25</span> + قيمة أخيرة حرّكها:</p>
+    <div class="sl-row"><b>القيمة الأخيرة:</b><input type="range" id="olRange" min="20" max="80" step="1" value="39" aria-label="last value"><b class="en" id="olVal">39</b></div>
+    <div id="olStrip"></div>
+    <div class="res-row">
+      <div class="res"><small><span class="en">Range</span></small><b id="olR"></b></div>
+      <div class="res"><small><span class="en">SD</span> (عينة)</small><b id="olS"></b></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0">الاتنين بيكبروا مع الـ <span class="en">outlier</span>. عشان كده لو فيه <span class="en">outliers</span> الكتاب بيقترح الانحراف الربيعي.</p>
+  </div>
+
+  <h3 class="sec">📜 <span class="en">Proof</span>: مجموع الانحرافات عن الـ <span class="en">mean</span> = صفر</h3>
+  <div class="note warn">📝 الكتاب بيذكر الحقيقة دي (<span class="en">Σ(x − <i class="ov">x</i>) = 0</span>) من غير إثبات. الإثبات القصير ده من عندي (فهم عام) لو الدكتور سأل «ليه بنربّع؟».</div>
+  <div class="proof">
+    <div class="ps" data-why="الـ Σ بتتوزع على الطرح"><div class="formula"><span class="en">Σ (x<sub>i</sub> − <i class="ov">x</i>) = Σ x<sub>i</sub> − Σ <i class="ov">x</i></span></div></div>
+    <div class="ps" data-why="الـ x̄ رقم ثابت بيتجمع n مرة"><div class="formula"><span class="en">Σ <i class="ov">x</i> = n · <i class="ov">x</i></span></div></div>
+    <div class="ps" data-why="تعريف الـ mean: x̄ = Σx / n"><div class="formula"><span class="en">n · <i class="ov">x</i> = n · <span class="fr"><span>Σ x<sub>i</sub></span><span>n</span></span> = Σ x<sub>i</sub></span></div></div>
+    <div class="ps" data-why="عوّض فوق"><div class="formula"><span class="en">Σ (x<sub>i</sub> − <i class="ov">x</i>) = Σ x<sub>i</sub> − Σ x<sub>i</sub> = <b>0</b> &nbsp;∎</span></div></div>
+    <div class="ps" data-why="تأكيد بالأرقام (مثال 1.3.1)"><div class="formula"><span class="en">4 + 8 + (−8) + 0 + (−4) = 0 ✔</span></div></div>
+  </div>
+
+  <div class="note">💡 <b>النتيجة:</b> عشان كده لو جمعنا الانحرافات من غير تربيع هنطلع صفر ومش هنعرف حاجة عن التشتت، فنربّع (أو نستخدم القيمة المطلقة في <span class="en">mean deviation</span>).</div>
+</section>
+
+<!-- =====================================================  6 · TRAPS -->
+<section class="station" data-icon="⚠️" data-title="فخاخ الامتحان">
+  <h2>فخاخ الامتحان ⚠️</h2>
+  <p class="lead">الجمل دي بالظبط هي اللي بتتعمل منها <span class="en">True/False</span>. قرر: صح ولا غلط؟ (<b class="en">20</b> جملة)</p>
+  <div data-deck="traps"></div>
+</section>
+
+<!-- =====================================================  7 · FLASHCARDS -->
+<section class="station" data-icon="🧠" data-title="Flashcards">
+  <h2>Flashcards 🧠</h2>
+  <p class="lead">فكّر في الإجابة الأول، وبعدين اقلب الكارت. علّم اللي عرفته ✅ واللي لسه 🔁 — وراجع الأخير بس.</p>
+  <div data-flash="main"></div>
+  <p class="hint" style="text-align:center;margin-top:10px">⌨️ مسطرة (Space) تقلب · الأسهم تنقل بين الكروت</p>
+</section>
+
+<!-- =====================================================  8 · QUIZ -->
+<section class="station" data-icon="📝" data-title="الكويز النهائي">
+  <h2>الكويز النهائي 📝</h2>
+  <p class="lead">10 أسئلة <span class="en">MCQ</span> بتصحيح فوري، وبعدها 3 أسئلة <span class="en">Essay</span> تكتب إجابتك وتقارنها بالنموذجية. (الأرقام هنا غير أرقام الكتاب.)</p>
+
+  <h3 class="sec">① MCQ</h3>
+  <div data-deck="mcq"></div>
+
+  <h3 class="sec">② Essay</h3>
+  <div class="card essay" data-essay="e1">
+    <h3>سؤال 1</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">Why is the arithmetic mean alone not enough to compare two phenomena? Illustrate with an example.</p>
+    <textarea placeholder="اكتب إجابتك هنا (بتتحفظ في المتصفح بس)…"></textarea>
+    <button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button>
+    <div class="model" hidden><div class="mdl"></div><div class="pts"></div></div>
+  </div>
+  <div class="card essay" data-essay="e2">
+    <h3>سؤال 2</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">(a) Write the formulas of the variance and the standard deviation for a population and for a sample. (b) Why is the standard deviation preferred over the variance? (c) Why do we square the deviations?</p>
+    <textarea placeholder="اكتب إجابتك هنا…"></textarea>
+    <button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button>
+    <div class="model" hidden><div class="mdl"></div><div class="pts"></div></div>
+  </div>
+  <div class="card essay" data-essay="e3">
+    <h3>سؤال 3 (حساب)</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">The daily sales (in thousand pounds) of a random sample of five shops are: 12, 15, 9, 20, 14. Find the range, the variance and the standard deviation.</p>
+    <textarea placeholder="اكتب الجدول والحل هنا…"></textarea>
+    <button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button>
+    <div class="model" hidden><div class="mdl"></div><div class="pts"></div></div>
+  </div>
+</section>
+
+<!-- =====================================================  9 · SUMMARY -->
+<section class="station summary" data-icon="⚡" data-title="ملخص المراجعة">
+  <h2>ملخص المراجعة ⚡ <span class="en plain" style="font-size:18px">Lecture 1</span></h2>
+  <p class="lead noprint">ده اللي تراجعه الليلة اللي قبل الامتحان. <button type="button" class="btn" onclick="window.print()">🖨️ اطبع / احفظ PDF</button></p>
+
+  <h3 class="sec">📏 المقاييس</h3>
+  <table class="tbl">
+    <tr><th>المقياس</th><th>القانون</th><th>الوحدة</th><th>ملحوظات</th></tr>
+    <tr class="ph-plan"><td><span class="dot"></span><span class="en">Range</span></td><td class="en">R = Max − Min <br>(مبوبة: upper limit of last − lower limit of first)</td><td>نفس وحدة البيانات</td><td>قيمتين بس، بيتأثر بالـ outliers</td></tr>
+    <tr class="ph-ana"><td><span class="dot"></span><span class="en">Variance (pop)</span></td><td class="en">σ² = Σ(x − μ)² / N</td><td>وحدة² </td><td>الـ mean = μ</td></tr>
+    <tr class="ph-ana"><td><span class="dot"></span><span class="en">Variance (sample)</span></td><td class="en">S² = Σ(x − x̄)² / (n − 1)</td><td>وحدة²</td><td>الـ mean = x̄</td></tr>
+    <tr class="ph-des"><td><span class="dot"></span><span class="en">SD</span></td><td class="en">σ = √σ² &nbsp; , &nbsp; S = √S²</td><td>نفس وحدة البيانات</td><td>الجذر التربيعي <b>الموجب</b> للتباين</td></tr>
+  </table>
+
+  <h3 class="sec">📌 نقط سريعة</h3>
+  <div class="grid g2">
+    <div class="card"><h4>📏 القواعد العامة</h4><p style="margin:0">كل مقاييس التشتت <b>≥ 0</b> (= 0 لو القيم كلها متساوية). المقارنة بالمقاييس المطلقة تحتاج <b>نفس الـ mean ونفس الوحدة</b>. مع الـ <span class="en">outliers</span> ← الانحراف الربيعي.</p></div>
+    <div class="card"><h4>📐 ليه الجذر والتربيع</h4><p style="margin:0"><span class="en">Σ(x − x̄) = 0</span> دايماً ← نربّع. وحدة التباين وحدة² ← نجذر عشان نرجع لوحدة البيانات.</p></div>
+    <div class="card"><h4>🔑 أي قانون؟</h4><p style="margin:0">«عينة» ← <span class="en">÷(n−1)</span> · «المجتمع ككل» ← <span class="en">÷N</span>.</p></div>
+    <div class="card"><h4>✅ SD: مميزات / ❌ عيوب</h4><p style="margin:0">✅ سهل، دقيق (كل القيم)، نفس الوحدة · ❌ بيتأثر بالـ <span class="en">outliers</span>، مش للبيانات الوصفية، صعب للمفتوحة.</p></div>
+  </div>
+
+  <h3 class="sec">📖 الكتاب ضد السلايدات</h3>
+  <table class="tbl">
+    <tr><th>النقطة</th><th>اللي حصل</th><th>اعمل إيه</th></tr>
+    <tr><td>المحتوى</td><td>السلايدات هي صفحات الكتاب (ص 4–35) بنفس الأمثلة</td><td>مفيش اختلاف في الأفكار</td></tr>
+    <tr><td>مثال الإحصاء والرياضيات</td><td>الاتنين كاتبين <span class="en">R = 78 − 66 = 12</span> لكن أقل درجة <span class="en">63</span></td><td>الصح <b class="en">15</b> (والفكرة ما اتغيرتش)</td></tr>
+    <tr><td>مثال <span class="en">1.2.6</span></td><td>النص بيقول «center» والحساب بالـ limits</td><td>استخدم <b>حدود</b> الفئات (التعريف)</td></tr>
+    <tr><td>تمارين آخر الشابتر</td><td>الكتاب فيه <span class="en">Exercises (2-1)</span> (18 صح/غلط + مسائل) مش في السلايدات</td><td>هتلاقيها في الـ <span class="en">Mock Exam</span></td></tr>
+  </table>
+
+  <h3 class="sec">⚠️ الفخاخ</h3>
+  <div class="note bad">
+    ❌ Range كبير = متجانس (العكس) &nbsp;·&nbsp; ❌ نفس الـ Range = نفس التشتت &nbsp;·&nbsp; ❌ الـ Range لكل القيم (هو قيمتين بس) &nbsp;·&nbsp; ❌ التباين بنفس وحدة البيانات (وحدة²) &nbsp;·&nbsp; ❌ بنقسم على n−1 للمجتمع &nbsp;·&nbsp; ❌ الـ SD مش بيتأثر بالـ outliers &nbsp;·&nbsp; ❌ مجموع الانحرافات مش صفر
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+window.DATA = {
+  decks: {
+    /* ---------- can we compare with absolute measures ---------- */
+    cmp: {
+      cols: 2,
+      opts: [{ t: 'آه ✔ ينفع نقارن', cls: 't-ok' }, { t: 'لأ ✘ مينفعش', cls: 't-bad' }],
+      cards: [
+        { q: 'فصلين، <span class="en">mean</span> الاتنين <b>60</b> درجة، والـ <span class="en">SD</span> بالدرجات.', a: 0, why: 'نفس الـ <b>mean</b> ونفس <b>الوحدة</b> ← الشرطين متحققين، فنقارن بالمقياس المطلق.' },
+        { q: 'نقارن تشتت <b>أطوال</b> مجموعة (سم) بتشتت <b>أعمارها</b> (سنة).', a: 1, why: 'الوحدة مختلفة (سم ضد سنة) ← مينفعش بالمقاييس المطلقة. (هنحتاج مقياس نسبي في المحاضرة الجاية.)' },
+        { q: 'شركتين، <span class="en">mean</span> الأجور <b>2000</b> و <b>5000</b> جنيه، الاتنين بالجنيه.', a: 1, why: 'الوحدة واحدة لكن الـ <b>mean</b> مختلف ← أحد الشرطين ناقص ← مينفعش.' },
+        { q: 'مجموعتين أطفال، <span class="en">mean</span> الذكاء <b>105</b> للاتنين (مثال 1.2.3).', a: 0, why: 'نفس الـ mean ونفس الوحدة ← نقارن بالـ Range (20 مقابل 60).' },
+        { q: 'مجموعتين رضا وظيفي، <span class="en">mean = 58</span> للاتنين بنفس مقياس الدرجات (مثال 1.3.3).', a: 0, why: 'الشرطين متحققين ← نقارن بالـ SD (2.608 مقابل 26.996).' },
+        { q: 'مجموعة وزن (كجم) ومجموعة أخرى طول (سم) وصادف إن الـ <span class="en">mean</span> متساوي رقمياً.', a: 1, why: 'الوحدة مختلفة. تساوي الأرقام مش معناه نفس الوحدة ← مينفعش.' }
+      ]
+    },
+
+    /* ---------- range drill ---------- */
+    rangeDrill: {
+      cols: 1, shuffleOpts: true,
+      cards: [
+        { q: 'Data: 14, 9, 22, 17, 11. The range is:', opts: ['13', '8', '22', '9'], a: 0, why: 'R = 22 − 9 = <b>13</b>.' },
+        { q: 'Grouped data: the first class is 20−30 and the last class is 60−70. The range is:', opts: ['50', '40', '45', '70'], a: 0, why: 'upper limit of last class − lower limit of first class = 70 − 20 = <b>50</b>.' },
+        { q: 'Data: 8, 8, 8, 8. The range is:', opts: ['0', '8', '1', '4'], a: 0, why: 'كل القيم متساوية ← مفيش تشتت ← <b>R = 0</b>.' },
+        { q: 'Group 1: 21, 23, 25, 27 · Group 2: 10, 24, 25, 40. According to the range, which group is more dispersed?', opts: ['Group 2 (R = 30)', 'Group 1 (R = 6)', 'Both are equal', 'Cannot be found'], a: 0, why: 'R₁ = 27 − 21 = 6 ، R₂ = 40 − 10 = 30 ← المجموعة 2 أكتر تشتتاً.' },
+        { q: 'Which of the following is a disadvantage of the range?', opts: ['It uses only the largest and the smallest values', 'It is hard to calculate', 'Its unit differs from the data unit', 'It can never be zero'], a: 0, why: 'الـ Range بيدخل فيه قيمتين بس، وممكن يكونوا متطرفين.' },
+        { q: 'Data: 5, 6, 7, 8, 100. The large range (95) is mainly caused by:', opts: ['The outlier 100', 'The mean', 'The sample size', 'The median'], a: 0, why: 'قيمة شاذة واحدة (100) كبّرت الـ Range. ده عيب الـ Range.' }
+      ]
+    },
+
+    /* ---------- Variance or SD ---------- */
+    varsd: {
+      cols: 2,
+      opts: [{ t: 'Variance', cls: 'ph-ana' }, { t: 'Standard Deviation', cls: 'ph-des' }],
+      cards: [
+        { q: 'وحدته <span class="en">(pound)²</span> لو القراءات بالجنيه.', a: 0, why: 'وحدة البيانات<b>²</b> ← التباين (Variance).' },
+        { q: 'وحدته <b>نفس</b> وحدة البيانات الأصلية.', a: 1, why: 'الجذر بيرجّع الوحدة الأصلية ← SD.' },
+        { q: 'الجذر التربيعي <b>الموجب</b> للتباين.', a: 1, why: 'تعريف الـ SD.' },
+        { q: 'متوسط مربعات انحرافات القيم عن الـ <span class="en">mean</span> (للمجتمع).', a: 0, why: 'ده تعريف الـ Variance للمجتمع (÷N).' },
+        { q: 'الأكتر استخداماً في الدراسات الإحصائية.', a: 1, why: 'الـ SD لأن وحدته نفس وحدة البيانات.' },
+        { q: 'الرمز <span class="en">S²</span>', a: 0, why: 'S² = Variance للعينة.' },
+        { q: 'الرمز <span class="en">σ</span> (sigma)', a: 1, why: 'σ = SD للمجتمع (و σ² = Variance).' }
+      ]
+    },
+
+    /* ---------- population or sample ---------- */
+    popsam: {
+      cols: 2,
+      opts: [{ t: 'Population (÷ N)', cls: 'ph-plan' }, { t: 'Sample (÷ n−1)', cls: 'ph-imp' }],
+      cards: [
+        { q: 'الأجور اليومية لـ <b>عينة</b> من 5 موظفين.', a: 1, why: 'كلمة <b>عينة</b> ← Sample ← ÷(n−1) (مثال 1.3.1).' },
+        { q: '«باعتبار هؤلاء التجار <b>يمثلوا المجتمع ككل</b>…» (مثال 1.3.4).', a: 0, why: 'البيانات هي كل المجتمع ← Population ← ÷N. (1650 ÷ 8 = 206.25)' },
+        { q: 'الرمز <span class="en">σ²</span>', a: 0, why: 'σ² = Population variance.' },
+        { q: 'الرمز <span class="en">S²</span>', a: 1, why: 'S² = Sample variance.' },
+        { q: 'الـ <span class="en">mean</span> رمزه <span class="en">μ</span>', a: 0, why: 'μ للمجتمع. أما العينة فـ x̄.' },
+        { q: 'الـ <span class="en">mean</span> رمزه <span class="en"><i class="ov">x</i></span>', a: 1, why: 'x̄ للعينة.' },
+        { q: 'بنقسم مجموع المربعات على <span class="en">N</span>.', a: 0, why: 'N = عدد كل المجتمع ← Population.' },
+        { q: 'بنقسم مجموع المربعات على <span class="en">(n − 1)</span>.', a: 1, why: 'n − 1 ← Sample.' }
+      ]
+    },
+
+    /* ---------- True / False traps ---------- */
+    traps: {
+      cols: 2,
+      opts: [{ t: 'صح ✔ (True)', cls: 't-ok' }, { t: 'غلط ✘ (False)', cls: 't-bad' }],
+      cards: [
+        { q: 'Two phenomena with the same mean must have the same dispersion.', a: 1, why: 'غلط. الإحصاء والرياضيات الاتنين mean = 70 والـ Range مختلف جداً.' },
+        { q: 'A smaller range indicates that the values are closer to each other (more homogeneous).', a: 0, why: 'صح. Range صغير = متقاربة ومتجانسة.' },
+        { q: 'For ungrouped data, the range equals the largest value minus the smallest value.', a: 0, why: 'صح: R = Max − Min.' },
+        { q: 'For grouped data, the range equals the upper limit of the last class minus the lower limit of the first class.', a: 0, why: 'صح (تعريف 1.2.1).' },
+        { q: 'All the values in the data set enter the calculation of the range.', a: 1, why: 'غلط. بيدخل فيه <b>قيمتين بس</b> (الأكبر والأصغر).' },
+        { q: 'Two data sets can have the same range but different standard deviations.', a: 0, why: 'صح. مثال 1.2.4: الاتنين R = 10 لكن توزيع القيم مختلف، عشان كده بنفضّل الـ SD.' },
+        { q: 'The unit of the variance is the square of the unit of the original data.', a: 0, why: 'صح. جنيه ← جنيه².' },
+        { q: 'The standard deviation has the same unit as the original data.', a: 0, why: 'صح. لأنه الجذر التربيعي للتباين.' },
+        { q: 'The population variance is calculated by dividing the sum of squared deviations by (n − 1).', a: 1, why: 'غلط. المجتمع ÷ <b>N</b>. الـ (n − 1) للعينة.' },
+        { q: 'The sample variance is calculated by dividing the sum of squared deviations by (n − 1).', a: 0, why: 'صح.' },
+        { q: 'The standard deviation is the positive square root of the variance.', a: 0, why: 'صح.' },
+        { q: 'The variance of a data set can be a negative number.', a: 1, why: 'غلط. مقاييس التشتت موجبة أو = صفر (مجموع مربعات).' },
+        { q: 'If all values of a data set are equal, then its standard deviation is zero.', a: 0, why: 'صح. مفيش تشتت أصلاً (كل مقاييس التشتت = 0).' },
+        { q: 'We square the deviations because their sum around the mean is always zero.', a: 0, why: 'صح. Σ(x − x̄) = 0 دايماً.' },
+        { q: 'The standard deviation is not affected by outliers.', a: 1, why: 'غلط. الـ SD (زي الـ Range) بيتأثر بالقيم المتطرفة.' },
+        { q: 'To compare dispersion using absolute measures, the two phenomena must have the same mean and the same unit of measurement.', a: 0, why: 'صح — الشرطين مع بعض.' },
+        { q: 'When outliers exist, the interquartile deviation can replace the range and the SD, because it depends on the order of the data.', a: 0, why: 'صح.' },
+        { q: 'The range can be easily found for open-ended frequency tables.', a: 1, why: 'غلط. صعب (أو مستحيل) للجداول التكرارية المفتوحة وللبيانات الوصفية.' },
+        { q: 'For a population of N = 8 values with Σ(x − μ)² = 1650, the variance is σ² = 1650 ÷ 8 = 206.25.', a: 0, why: 'صح (مثال 1.3.4، ÷N لأنهم المجتمع كله).' },
+        { q: 'The standard deviation can be calculated for descriptive (qualitative) data.', a: 1, why: 'غلط. مش ممكن للبيانات الوصفية.' }
+      ]
+    },
+
+    /* ---------- MCQ ---------- */
+    mcq: {
+      cols: 1, shuffleOpts: true,
+      cards: [
+        { q: 'Which statement about two phenomena that have the same mean is correct?', opts: ['They may still differ greatly in dispersion', 'They must have the same range', 'They must have the same standard deviation', 'They must have the same variance'], a: 0, why: 'نفس الـ mean مش بيضمن نفس التشتت (مثال الإحصاء والرياضيات).' },
+        { q: 'The range of the data 23, 31, 18, 40, 27 is:', opts: ['22', '17', '40', '13'], a: 0, why: 'R = 40 − 18 = <b>22</b>.' },
+        { q: 'The sample variance of the data 4, 8, 6, 10 is:', opts: ['6.67', '5', '20', '2.58'], a: 0, why: 'mean = 7، الانحرافات −3, 1, −1, 3 ← مربعاتها 9+1+1+9 = 20 ← S² = 20 ÷ 3 = <b>6.67</b>. (5 = 20÷4 للمجتمع، و 2.58 هو الـ SD.)' },
+        { q: 'A population has the values 2, 4, 4, 4, 5, 5, 7, 9 (mean = 5 and Σ(x−μ)² = 32). Its standard deviation σ is:', opts: ['2', '4', '2.14', '5.66'], a: 0, why: 'σ² = 32 ÷ 8 = 4 ← σ = √4 = <b>2</b>. (4 = التباين، 2.14 = SD لو اعتبرناها عينة، 5.66 = √32.)' },
+        { q: 'If the data are measured in kilograms, the unit of the variance is:', opts: ['kg²', 'kg', 'kg³', 'It has no unit'], a: 0, why: 'وحدة التباين = مربع وحدة البيانات.' },
+        { q: 'The sum of the deviations of the values from their arithmetic mean is always:', opts: ['Equal to zero', 'Positive', 'Negative', 'Equal to the variance'], a: 0, why: 'Σ(x − x̄) = 0 دايماً.' },
+        { q: 'When the data contain outliers, which measure can be used instead of the range and the standard deviation?', opts: ['The interquartile deviation', 'The arithmetic mean', 'The variance', 'The mode'], a: 0, why: 'الانحراف الربيعي بيعتمد على ترتيب البيانات.' },
+        { q: 'Class A has mean 60 and SD 4; class B has mean 60 and SD 9 (same unit). Which statement is correct?', opts: ['Class A is more homogeneous', 'Class B is more homogeneous', 'Both have the same dispersion', 'They cannot be compared'], a: 0, why: 'نفس الـ mean ونفس الوحدة ← نقارن بالـ SD: الأصغر (4) أكثر تجانساً.' },
+        { q: 'For grouped data with classes 5−15, 15−25, 25−35, 35−45, the range is:', opts: ['40', '30', '45', '35'], a: 0, why: 'R = upper limit of last (45) − lower limit of first (5) = <b>40</b>.' },
+        { q: 'Which of the following is NOT an advantage of the standard deviation?', opts: ['It is not affected by outliers', 'It has the same unit as the data', 'All the values enter its calculation', 'It is easy to calculate algebraically'], a: 0, why: 'الـ SD <b>بيتأثر</b> بالـ outliers (ده عيبه).' }
+      ]
+    }
+  },
+
+  /* ---------- flashcards ---------- */
+  flash: {
+    main: [
+      { f: 'ليه الـ <span class="en">mean</span> لوحده مش كفاية للمقارنة؟', b: 'ظاهرتين ممكن يتساووا في الـ mean ومفرداتهم مختلفة (واحدة متقاربة والتانية مبعثرة). فنضيف مقياس <b>تشتت</b>.<br>مثال: الإحصاء والرياضيات mean = 70 للاتنين.' },
+      { f: 'يعني إيه <span class="en">Dispersion</span>؟', b: 'مدى تقارب أو تباعد القيم عن بعضها. صغير لو الفروق قليلة، وكبير لو الفروق كبيرة.' },
+      { f: 'مقاييس التشتت اللي الكتاب ذكرها', b: '<span class="en">Index of dispersion (descriptive data) · Range · Half interquartile range · Variance &amp; SD · Mean deviation</span><br>هنركز على <b>Range</b> و <b>Variance / SD</b>.' },
+      { f: 'قيمة أي مقياس تشتت', b: 'موجبة أو = صفر. وبتساوي صفر لو كل القيم متساوية.' },
+      { f: 'مقاييس التشتت المطلق (<span class="en">Absolute</span>)', b: '<span class="en">Range · half-IQR · mean deviation · SD</span> — لأنها بنفس وحدة قياس الظاهرة.' },
+      { f: 'شروط المقارنة بالمقاييس المطلقة', b: '<b>الاتنين مع بعض:</b><br>① نفس الـ <span class="en">mean</span><br>② نفس وحدة القياس.' },
+      { f: 'لو فيه <span class="en">outliers</span>', b: 'الانحراف الربيعي (<span class="en">interquartile deviation</span>) بديل للـ Range والـ SD لأنه بيعتمد على <b>ترتيب</b> البيانات مش القيم.' },
+      { f: '<span class="en">Range</span> — تعريفه', b: '<span class="en">R = Largest − Smallest</span><br>(أبسط مقياس تشتت).' },
+      { f: '<span class="en">Range</span> للبيانات المبوبة', b: 'الحد الأعلى للفئة الأخيرة − الحد الأدنى للفئة الأولى.<br><span class="en">مثال: 58 − 10 = 48</span>' },
+      { f: 'مميزات الـ <span class="en">Range</span>', b: '① سهل الحساب جبرياً<br>② يدّي فكرة سريعة عن التفاوت' },
+      { f: 'عيوب الـ <span class="en">Range</span>', b: '① بيدخل فيه قيمتين بس (أكبر وأصغر) وممكن يكونوا متطرفين<br>② صعب للبيانات الوصفية والجداول المفتوحة<br>③ بيتأثر بالقيم الشاذة' },
+      { f: '<span class="en">Range</span> كبير بيدل على إيه؟', b: 'القيم <b>مبعثرة ومتباعدة</b>. و Range صغير = <b>متقاربة ومتجانسة</b> (<span class="en">homogeneous</span>).' },
+      { f: 'التباين للمجتمع <span class="en">σ²</span>', b: '<span class="en">σ² = Σ(x − μ)² / N</span><br>متوسط مربعات الانحرافات.' },
+      { f: 'التباين للعينة <span class="en">S²</span>', b: '<span class="en">S² = Σ(x − x̄)² / (n − 1)</span>' },
+      { f: 'الانحراف المعياري <span class="en">SD</span>', b: 'الجذر التربيعي <b>الموجب</b> للتباين:<br><span class="en">σ = √σ² &nbsp;،&nbsp; S = √S²</span>' },
+      { f: 'وحدة التباين ووحدة الـ <span class="en">SD</span>', b: 'التباين: وحدة البيانات<b>²</b> (جنيه²).<br>الـ SD: <b>نفس</b> وحدة البيانات ← عشان كده أكتر استخداماً.' },
+      { f: 'ليه بنربّع الانحرافات؟', b: 'لأن <span class="en">Σ(x − x̄) = 0</span> دايماً، ومهمنا <b>المسافة</b> مش الاتجاه.' },
+      { f: 'رموز المجتمع والعينة', b: 'المجتمع: <span class="en">μ · σ² · σ</span><br>العينة: <span class="en">x̄ · S² · S</span>' },
+      { f: 'إمتى ÷<span class="en">N</span> وإمتى ÷<span class="en">(n−1)</span>؟', b: '<b>N</b> لو البيانات هي كل المجتمع (population).<br><b>n − 1</b> لو sample.' },
+      { f: 'خطوات حساب التباين', b: '① mean ② xᵢ − x̄ ③ نربّع ④ نجمع ونقسم (n−1 أو N) ⑤ جذر ← SD' },
+      { f: 'مجموع <span class="en">x<sub>i</sub> − x̄</span> المفروض يطلع كام؟', b: '<b>صفر</b>. لو مطلعش صفر ففيه غلط في الـ mean أو الطرح.' },
+      { f: 'عيوب الـ <span class="en">SD</span>', b: '① بيتأثر بالـ outliers ② مش ممكن للبيانات الوصفية ③ صعب للجداول المفتوحة' },
+      { f: 'مميزات الـ <span class="en">SD</span>', b: '① سهل جبرياً ② من أدق المقاييس لأن كل القيم داخلة ③ نفس وحدة الظاهرة' },
+      { f: 'مثال 1.3.3: مجموعتين <span class="en">mean = 58</span>', b: 'م1: <span class="en">S² = 6.8 ، S = 2.608</span><br>م2: <span class="en">S² = 728.8 ، S = 26.996</span><br>نفس الـ mean والتشتت مختلف جداً.' },
+      { f: 'مثال 1.3.1: <span class="en">40, 44, 28, 36, 32</span>', b: '<span class="en">x̄ = 36 ، Σ(x−x̄)² = 160 ، S² = 160/4 = 40 ، S = 6.32</span>' },
+      { f: 'مثال 1.3.4 — ليه ÷8 مش ÷7؟', b: 'لأن التجار «يمثلوا المجتمع ككل» ← population.<br><span class="en">σ² = 1650/8 = 206.25 ، σ = 14.36</span>' },
+      { f: 'نفس الـ <span class="en">Range</span> ومع كده تشتت مختلف؟', b: 'ممكن! (مثال 1.2.4: الاتنين R = 10). عشان كده بنفضّل الـ <b>SD</b> لأن كل القيم بتدخل في حسابه.' },
+      { f: 'مثال 1.2.3 (<span class="en">IQ</span>)', b: '<span class="en">R₁ = 115 − 95 = 20 ، R₂ = 135 − 75 = 60</span><br>المجموعة 2 تشتتها 3 أمثال ← الأولى أكتر تجانساً.' }
+    ]
+  },
+
+  /* ---------- essay model answers ---------- */
+  essays: {
+    e1: {
+      model:
+        '<div dir="ltr" style="line-height:1.85">' +
+        '<b>Why the mean is not enough.</b> The mean only shows the centre around which the values gather; it does not show how the values are distributed. Two phenomena may have exactly the same mean while the values of one are close to each other and the values of the other are scattered, so we cannot compare them by their means alone and must add a measure of dispersion.<br>' +
+        '<b>Example.</b> Statistics grades 78, 72, 71, 66, 63 and Mathematics grades 96, 82, 70, 61, 41 both have a mean of 70. But the range of mathematics (96 − 41 = 55) is much larger than the range of statistics (78 − 63 = 15), so the mathematics grades are far more dispersed.' +
+        '<div class="muted" dir="rtl" style="margin-top:6px">📝 الكتاب والسلايد كاتبين range الإحصاء 12 (typo)، الصح 15.</div></div>',
+      points: [
+        'The mean shows only the centre, not how the values are distributed',
+        'Two phenomena can have equal means but different dispersion',
+        'Gave a numerical example (e.g. same mean 70 but ranges differ)',
+        'Concluded that we need a measure of dispersion (range / SD)'
+      ]
+    },
+    e2: {
+      model:
+        '<div dir="ltr" style="line-height:1.85">' +
+        '<b>(a) Population:</b> σ² = Σ(x<sub>i</sub> − μ)² / N , σ = √σ².<br>' +
+        '<b>Sample:</b> S² = Σ(x<sub>i</sub> − x̄)² / (n − 1) , S = √S².<br>' +
+        '<b>(b)</b> The unit of the variance is the square of the original unit (e.g. pound²), whereas the standard deviation, as the positive square root, has the same unit as the original data, so it is used more often.<br>' +
+        '<b>(c)</b> The sum of the deviations from the mean is always zero, so we square them: we care about the distance of a value from the mean, not whether it is above or below it.</div>',
+      points: [
+        'Population variance: Σ(x − μ)² / N and σ = √σ²',
+        'Sample variance: Σ(x − x̄)² / (n − 1) and S = √S²',
+        'SD preferred: same unit as the data (variance is in squared units)',
+        'Squaring because the sum of deviations from the mean is zero',
+        'We care about distance, not direction'
+      ]
+    },
+    e3: {
+      model:
+        '<div dir="ltr" style="line-height:1.85">' +
+        '<b>Range</b> = 20 − 9 = <b>11</b>.<br>' +
+        '<b>Mean</b> x̄ = (12 + 15 + 9 + 20 + 14) / 5 = 70 / 5 = <b>14</b>.<br>' +
+        '<div class="tscroll"><table class="tbl ctbl sm">' +
+        '<tr><th>i</th><th>x<sub>i</sub></th><th>x<sub>i</sub> − x̄</th><th>(x<sub>i</sub> − x̄)²</th></tr>' +
+        '<tr><td>1</td><td>12</td><td>−2</td><td>4</td></tr><tr><td>2</td><td>15</td><td>1</td><td>1</td></tr>' +
+        '<tr><td>3</td><td>9</td><td>−5</td><td>25</td></tr><tr><td>4</td><td>20</td><td>6</td><td>36</td></tr>' +
+        '<tr><td>5</td><td>14</td><td>0</td><td>0</td></tr><tr class="tot"><td>Σ</td><td>70</td><td>0 ✔</td><td>66</td></tr></table></div>' +
+        '<b>Variance</b> (sample) S² = 66 / (5 − 1) = 66 / 4 = <b>16.5</b>.<br>' +
+        '<b>SD</b> S = √16.5 ≈ <b>4.06</b> (thousand pounds).</div>',
+      points: [
+        'Range = 20 − 9 = 11',
+        'Mean = 14',
+        'Deviations sum to 0 and squared deviations sum to 66',
+        'S² = 66 / 4 = 16.5 (sample, n − 1)',
+        'S = √16.5 ≈ 4.06 with the unit'
+      ]
+    }
+  }
+};
+</script>
+<script>
+/* ==========================================================
+   BS201 study pages — shared interactive engine
+   Reads window.DATA = { decks:{}, flash:{}, essays:{} }
+   ========================================================== */
+(function () {
+  'use strict';
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const shuffle = (a) => {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const DATA = window.DATA || {};
+  const KEY = 'bs201:' + (document.body.dataset.lecture || 'x');
+  let S = {};
+  try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
+  S.done = S.done || {}; S.best = S.best || {}; S.fc = S.fc || {}; S.essay = S.essay || {};
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  /* ---------- theme ---------- */
+  const TK = 'bs201:theme';
+  let theme = 'dark';
+  try { theme = localStorage.getItem(TK) || 'dark'; } catch (e) {}
+  const themeBtn = $('#themeBtn');
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    if (themeBtn) themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+    try { localStorage.setItem(TK, t); } catch (e) {}
+  }
+  applyTheme(theme);
+  if (themeBtn) themeBtn.addEventListener('click', () => applyTheme(theme === 'dark' ? 'light' : 'dark'));
+
+  /* ---------- stations ---------- */
+  const stations = $$('.station');
+  const nav = $('#nav');
+  const navBtns = [];
+  let cur = -1;
+
+  stations.forEach((st, i) => {
+    if (nav) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = `<span class="num">${i + 1}</span><span class="lbl">${st.dataset.icon || ''} ${st.dataset.title || ''}</span><span class="tick">✓</span>`;
+      b.addEventListener('click', () => go(i));
+      nav.appendChild(b);
+      navBtns.push(b);
+    }
+    const last = i === stations.length - 1;
+    const f = document.createElement('div');
+    f.className = 'station-foot noprint';
+    f.innerHTML =
+      `<button type="button" class="btn ghost" data-prev${i === 0 ? ' style="visibility:hidden"' : ''}>→ السابق</button>` +
+      (last
+        ? `<a class="btn primary" href="index.html" data-finish>خلّصت المحاضرة 🏁</a>`
+        : `<button type="button" class="btn primary" data-next>التالي ←</button>`);
+    st.appendChild(f);
+    const p = $('[data-prev]', f), n = $('[data-next]', f), fin = $('[data-finish]', f);
+    if (p) p.addEventListener('click', () => go(i - 1));
+    if (n) n.addEventListener('click', () => go(i + 1));
+    if (fin) fin.addEventListener('click', () => { S.done[i] = true; save(); });
+  });
+
+  function refresh() {
+    navBtns.forEach((b, k) => {
+      b.classList.toggle('on', k === cur);
+      b.classList.toggle('done', !!S.done[k]);
+    });
+    const n = stations.filter((_, k) => S.done[k]).length;
+    const pb = $('#progBar'), pt = $('#progTxt');
+    if (pb) pb.style.width = (n / stations.length * 100) + '%';
+    if (pt) pt.textContent = n + '/' + stations.length;
+  }
+
+  function go(i, init) {
+    i = Math.max(0, Math.min(stations.length - 1, i));
+    if (!init && cur >= 0 && i > cur) S.done[cur] = true;
+    cur = i;
+    stations.forEach((s, k) => s.classList.toggle('on', k === i));
+    S.last = i; save(); refresh();
+    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+    if (!init) window.scrollTo({ top: 0, behavior: 'smooth' });
+    const nb = navBtns[i];
+    if (nb && nav && nav.scrollWidth > nav.clientWidth) nb.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  $$('[data-go]').forEach((e) => e.addEventListener('click', () => go(parseInt(e.dataset.go, 10) - 1)));
+
+  /* ---------- flip cards ---------- */
+  $$('.flip').forEach((el) => {
+    const f = $('.f', el), b = $('.b', el);
+    if (!f || !b) return;
+    const inn = document.createElement('div');
+    inn.className = 'flip-in';
+    f.className = 'face front'; b.className = 'face back';
+    inn.append(f, b); el.append(inn);
+    el.tabIndex = 0;
+    el.addEventListener('click', () => el.classList.toggle('open'));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.classList.toggle('open'); }
+    });
+  });
+
+  /* ---------- tabs ---------- */
+  $$('[data-tabs]').forEach((root) => {
+    const btns = $$('[data-tab]', root), panes = $$('[data-pane]', root);
+    const set = (id) => {
+      btns.forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
+      panes.forEach((p) => p.classList.toggle('on', p.dataset.pane === id));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => set(b.dataset.tab)));
+    set(root.dataset.tabs || (btns[0] && btns[0].dataset.tab));
+  });
+
+  /* ---------- deck (quiz / sorting / true-false) ---------- */
+  function Deck(root, cfg) {
+    let cards = shuffle(cfg.cards), i = 0, score = 0, locked = false, order = [];
+    root.classList.add('deck');
+    root.innerHTML =
+      `<div class="deck-head"><span class="cnt"></span><div class="deck-bar"><i></i></div><span class="sc"></span></div><div class="deck-body"></div>`;
+    const body = $('.deck-body', root), cnt = $('.cnt', root), bar = $('.deck-bar i', root), sc = $('.sc', root);
+
+    function render() {
+      if (i >= cards.length) return end();
+      const c = cards[i];
+      locked = false;
+      cnt.textContent = (i + 1) + ' / ' + cards.length;
+      bar.style.width = (i / cards.length * 100) + '%';
+      sc.textContent = '⭐ ' + score;
+      const opts = c.opts || cfg.opts;
+      const cols = cfg.cols ? ' c' + cfg.cols : '';
+      body.innerHTML = `<div class="deck-q" dir="auto">${c.q}</div><div class="opts${cols}"></div><div class="fbwrap"></div>`;
+      const wrap = $('.opts', body);
+      // cfg.shuffleOpts: mix the answer order of per-card MCQ options so position never gives the answer away
+      order = opts.map((_, k) => k);
+      if (cfg.shuffleOpts && c.opts) order = shuffle(order);
+      order.forEach((oi, k) => {
+        const o = opts[oi];
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'opt' + (typeof o === 'object' && o.cls ? ' ' + o.cls : '');
+        b.setAttribute('dir', 'auto');
+        b.innerHTML = typeof o === 'string' ? o : o.t;
+        b.addEventListener('click', () => pick(k));
+        wrap.appendChild(b);
+      });
+    }
+
+    function pick(k) {
+      if (locked) return;
+      locked = true;
+      const c = cards[i], ok = order[k] === c.a;
+      if (ok) score++;
+      $$('.opt', body).forEach((b, j) => {
+        b.disabled = true;
+        if (order[j] === c.a) b.classList.add('right');
+        else if (j === k) b.classList.add('wrong');
+      });
+      sc.textContent = '⭐ ' + score;
+      const fb = $('.fbwrap', body);
+      fb.innerHTML =
+        `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✔ تمام!' : '✘ لأ — راجع الشرح'}</b><div dir="auto">${c.why || ''}</div>` +
+        `<button type="button" class="btn primary nxt">${i === cards.length - 1 ? 'شوف النتيجة' : 'التالي ←'}</button></div>`;
+      const nx = $('.nxt', fb);
+      nx.addEventListener('click', () => { i++; render(); });
+      nx.focus({ preventScroll: true });
+    }
+
+    function end() {
+      bar.style.width = '100%';
+      const pct = Math.round(score / cards.length * 100);
+      const best = Math.max(S.best[cfg.id] || 0, pct);
+      S.best[cfg.id] = best; save();
+      const msg = pct === 100 ? 'ممتاز! 🔥 الجزء ده تمام' : pct >= 70 ? 'كويس جداً 👏 راجع الغلطات بس' : 'لسه محتاج مراجعة — ارجع للشرح وجرّب تاني 💪';
+      sc.textContent = '⭐ ' + score;
+      cnt.textContent = 'خلصت';
+      body.innerHTML =
+        `<div class="deck-end"><div class="big">${pct}%</div><p>${score} من ${cards.length} — ${msg}</p>` +
+        `<p class="muted">أحسن نتيجة ليك: ${best}%</p><button type="button" class="btn primary again">🔁 العب تاني</button></div>`;
+      $('.again', body).addEventListener('click', () => { cards = shuffle(cfg.cards); i = 0; score = 0; render(); });
+      if (cfg.onDone) cfg.onDone(pct);
+    }
+    render();
+  }
+
+  /* ---------- flashcards ---------- */
+  function Flash(root, cards, id) {
+    let mode = 'all', pos = 0, list = [], timer;
+    root.classList.add('fc');
+    root.innerHTML =
+      `<div class="fc-top"><div class="seg"><button type="button" data-m="all" class="on">كل الكروت</button><button type="button" data-m="review">اللي لسه مش حافظها</button></div><span class="fc-count muted"></span></div>` +
+      `<div class="fc-card" tabindex="0"><div class="fc-in"><div class="face front"></div><div class="face back"></div></div></div>` +
+      `<div class="fc-actions"><button type="button" class="btn" data-a="prev">→ اللي قبلها</button><button type="button" class="btn bad" data-a="r">🔁 لسه مش حافظها</button><button type="button" class="btn good" data-a="k">✅ عرفتها</button><button type="button" class="btn" data-a="next">اللي بعدها ←</button></div>` +
+      `<div class="deck-bar"><i></i></div><p class="fc-stat muted"></p>`;
+    const card = $('.fc-card', root), front = $('.front', root), back = $('.back', root);
+    const cnt = $('.fc-count', root), bar = $('.deck-bar i', root), stat = $('.fc-stat', root);
+    const key = (n) => id + ':' + n;
+
+    function stats() {
+      const k = cards.filter((_, n) => S.fc[key(n)] === 'k').length;
+      stat.textContent = 'عرفت ' + k + ' من ' + cards.length;
+      bar.style.width = (k / cards.length * 100) + '%';
+    }
+    function show() {
+      list = cards.map((_, n) => n).filter((n) => mode === 'all' || S.fc[key(n)] !== 'k');
+      stats();
+      clearTimeout(timer);
+      if (!list.length) {
+        card.classList.remove('open');
+        front.innerHTML = '<div dir="auto">🎉 خلصت كل الكروت!</div><small>ارجع لـ "كل الكروت" لو عايز تراجع تاني</small>';
+        back.innerHTML = '';
+        cnt.textContent = '0 / 0';
+        return;
+      }
+      pos = ((pos % list.length) + list.length) % list.length;
+      const c = cards[list[pos]];
+      const fill = () => {
+        front.innerHTML = `<small>السؤال</small><div dir="auto">${c.f}</div><small>👆 اضغط عشان تقلب الكارت</small>`;
+        back.innerHTML = `<small>الإجابة</small><div dir="auto">${c.b}</div>`;
+      };
+      if (card.classList.contains('open')) { card.classList.remove('open'); timer = setTimeout(fill, 230); } else fill();
+      cnt.textContent = (pos + 1) + ' / ' + list.length;
+    }
+
+    root.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-a]');
+      if (a) {
+        const act = a.dataset.a;
+        if (act === 'next') pos++;
+        else if (act === 'prev') pos--;
+        else {
+          S.fc[key(list[pos])] = act; save();
+          if (!(mode === 'review' && act === 'k')) pos++;
+        }
+        show();
+        return;
+      }
+      const m = e.target.closest('[data-m]');
+      if (m) {
+        mode = m.dataset.m; pos = 0;
+        $$('[data-m]', root).forEach((x) => x.classList.toggle('on', x === m));
+        show();
+        return;
+      }
+      if (e.target.closest('.fc-card')) card.classList.toggle('open');
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('open'); }
+    });
+    show();
+  }
+
+  /* ---------- essay ---------- */
+  $$('.essay').forEach((el) => {
+    const id = el.dataset.essay, d = (DATA.essays || {})[id];
+    if (!d) return;
+    const ta = $('textarea', el), btn = $('[data-show]', el), box = $('.model', el);
+    ta.value = S.essay[id] || '';
+    ta.addEventListener('input', () => { S.essay[id] = ta.value; save(); });
+    $('.mdl', box).innerHTML = d.model;
+    const pts = $('.pts', box);
+    pts.innerHTML =
+      '<h4>✅ علّم على النقط اللي غطّيتها في إجابتك:</h4>' +
+      d.points.map((p) => `<label class="chk"><input type="checkbox"> <span dir="auto">${p}</span></label>`).join('') +
+      '<div class="pts-sc"></div>';
+    const sc = $('.pts-sc', pts);
+    const upd = () => {
+      const n = $$('input:checked', pts).length;
+      sc.textContent = 'غطّيت ' + n + ' من ' + d.points.length + (n === d.points.length ? ' 🔥' : '');
+    };
+    pts.addEventListener('change', upd); upd();
+    btn.addEventListener('click', () => {
+      box.hidden = !box.hidden;
+      btn.textContent = box.hidden ? '📖 اعرض الإجابة النموذجية' : '🙈 اخفي الإجابة';
+    });
+  });
+
+  /* ---------- keyboard for flashcards ---------- */
+  document.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const st = stations[cur];
+    const fc = st && $('.fc', st);
+    if (!fc) return;
+    if (e.key === 'ArrowLeft') $('[data-a="next"]', fc).click();
+    else if (e.key === 'ArrowRight') $('[data-a="prev"]', fc).click();
+    else if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); $('.fc-card', fc).classList.toggle('open'); }
+  });
+
+
+  /* ---------- helpers: number format + number-line strip (BS201) ---------- */
+  const fmt = (x, d) => {
+    d = d == null ? 2 : d;
+    if (!isFinite(x)) return '—';
+    return String(+x.toFixed(d));
+  };
+  function strip(el, o) {
+    const W = 600, H = 112, pad = 26, lo = o.lo, hi = o.hi, step = o.step || 10;
+    const X = (v) => pad + (v - lo) / (hi - lo) * (W - 2 * pad);
+    const vals = o.vals.slice().sort((a, b) => a - b);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const mn = vals[0], mx = vals[vals.length - 1];
+    let s = `<svg viewBox="0 0 ${W} ${H}" class="strip" role="img" aria-label="number line">`;
+    s += `<line x1="${pad}" y1="70" x2="${W - pad}" y2="70" class="ax"/>`;
+    for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) {
+      s += `<line x1="${X(t)}" y1="66" x2="${X(t)}" y2="74" class="ax"/><text x="${X(t)}" y="91" class="tk">${t}</text>`;
+    }
+    if (o.range !== false) {
+      s += `<line x1="${X(mn)}" y1="22" x2="${X(mx)}" y2="22" class="rg"/><line x1="${X(mn)}" y1="16" x2="${X(mn)}" y2="28" class="rg"/><line x1="${X(mx)}" y1="16" x2="${X(mx)}" y2="28" class="rg"/>` +
+        `<text x="${(X(mn) + X(mx)) / 2}" y="11" class="rgt">R = ${fmt(mx - mn)}</text>`;
+    }
+    if (o.mean !== false) {
+      s += `<line x1="${X(mean)}" y1="30" x2="${X(mean)}" y2="76" class="mn"/><text x="${X(mean)}" y="107" class="mnt">x̄ = ${fmt(mean)}</text>`;
+    }
+    const seen = {};
+    vals.forEach((v) => {
+      const k = seen[v] = (seen[v] || 0) + 1;
+      s += `<circle cx="${X(v)}" cy="${56 - (k - 1) * 14}" r="7"/>`;
+    });
+    s += '</svg>';
+    el.innerHTML = s;
+    return { mean, mn, mx };
+  }
+
+  /* ---------- proof stepper ---------- */
+  $$('.proof').forEach((root) => {
+    const steps = $$('.ps', root);
+    let k = 0;
+    steps.forEach((s, i) => {
+      const body = document.createElement('div');
+      body.className = 'pb';
+      while (s.firstChild) body.appendChild(s.firstChild);
+      if (s.dataset.why) {
+        const w = document.createElement('div');
+        w.className = 'pwhy';
+        w.innerHTML = '💡 ' + s.dataset.why;
+        body.appendChild(w);
+      }
+      const n = document.createElement('span');
+      n.className = 'pn';
+      n.textContent = i + 1;
+      s.append(n, body);
+    });
+    const bar = document.createElement('div');
+    bar.className = 'proof-bar noprint';
+    bar.innerHTML = '<button type="button" class="btn primary" data-n>الخطوة اللي بعدها ▶</button><button type="button" class="btn" data-all>اعرض الكل</button><button type="button" class="btn ghost" data-r>🔁 من الأول</button><span class="muted pcnt"></span>';
+    root.appendChild(bar);
+    const nb = $('[data-n]', bar), cnt = $('.pcnt', bar);
+    const upd = () => {
+      steps.forEach((s, i) => s.classList.toggle('on', i < k));
+      cnt.textContent = k + ' / ' + steps.length;
+      nb.disabled = k >= steps.length;
+    };
+    nb.addEventListener('click', () => { k = Math.min(steps.length, k + 1); upd(); });
+    $('[data-all]', bar).addEventListener('click', () => { k = steps.length; upd(); });
+    $('[data-r]', bar).addEventListener('click', () => { k = 0; upd(); });
+    upd();
+  });
+
+
+  /* ---------- order-the-steps game (proofs) ---------- */
+  $$('[data-order]').forEach((root) => {
+    const items = $$('.oi', root).map((e) => e.innerHTML);
+    root.innerHTML = '';
+    root.classList.add('order');
+    root.innerHTML =
+      '<div class="o-head"><b>🧩 رتّب خطوات الإثبات:</b> <span class="muted">اضغط الخطوات بالترتيب الصح</span></div>' +
+      '<ol class="o-ans"></ol><div class="o-pool"></div><div class="o-msg" aria-live="polite"></div>' +
+      '<button type="button" class="btn ghost o-reset">🔁 من الأول</button>';
+    const ans = $('.o-ans', root), pool = $('.o-pool', root), msg = $('.o-msg', root);
+    let next = 0;
+    const draw = () => {
+      next = 0; ans.innerHTML = ''; pool.innerHTML = ''; msg.textContent = ''; msg.className = 'o-msg';
+      shuffle(items.map((h, i) => ({ h, i }))).forEach((o) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'opt o-btn'; b.dir = 'ltr'; b.innerHTML = o.h;
+        b.addEventListener('click', () => {
+          if (b.disabled) return;
+          if (o.i === next) {
+            const li = document.createElement('li'); li.className = 'o-ok'; li.dir = 'ltr'; li.innerHTML = o.h;
+            ans.appendChild(li); b.disabled = true; b.style.display = 'none'; next++;
+            if (next === items.length) { msg.className = 'o-msg good'; msg.textContent = '✔ الترتيب صح! ده الإثبات كامل.'; }
+            else { msg.className = 'o-msg'; msg.textContent = 'تمام ✔ كمّل: إيه الخطوة اللي بعدها؟'; }
+          } else {
+            b.classList.add('wrong');
+            msg.className = 'o-msg bad'; msg.textContent = '✘ مش دي الخطوة اللي بعدها. فكّر: إيه اللي لازم يحصل قبلها؟';
+            setTimeout(() => b.classList.remove('wrong'), 700);
+          }
+        });
+        pool.appendChild(b);
+      });
+    };
+    $('.o-reset', root).addEventListener('click', draw);
+    draw();
+  });
+
+  /* ---------- init decks / flashcards ---------- */
+  const markDone = (el) => {
+    const i = stations.indexOf(el.closest('.station'));
+    if (i >= 0) { S.done[i] = true; save(); refresh(); }
+  };
+  $$('[data-deck]').forEach((el) => {
+    const c = (DATA.decks || {})[el.dataset.deck];
+    if (c) Deck(el, Object.assign({}, c, { id: el.dataset.deck, onDone: () => markDone(el) }));
+  });
+  $$('[data-flash]').forEach((el) => {
+    const c = (DATA.flash || {})[el.dataset.flash];
+    if (c) Flash(el, c, el.dataset.flash);
+  });
+
+  /* ---------- share disclaimer: ONE place, shows at the bottom of every page (index.src.html has its own copy) ---------- */
+  /* >>> EDIT PER SUBJECT: name the real sources (textbook, instructor, slides) <<< */
+  const SOURCES_AR = 'المصادر: كتاب المادة «Introduction to Statistics and Probabilities» (د. كرم خليفة — كلية الحاسبات والمعلومات والذكاء الاصطناعي، جامعة مدينة السادات) وسلايدات المحاضرات.';
+  const SOURCES_EN = 'Sources: the course textbook “Introduction to Statistics and Probabilities” (Dr. Karam Khalifa, Faculty of Computers, Information and AI, University of Sadat City) and the lecture slides.';
+  (function () {
+    const f = document.createElement('footer');
+    f.className = 'disclaimer';
+    f.innerHTML =
+      '<div dir="rtl"><b>⚠️ تنبيه مهم قبل ما تعتمد على الصفحات دي:</b> دي ملخصات ومراجعة شخصية من إعداد طالب لمساعدة زمايله، وهي <b>مش مادة رسمية</b> ومش معتمدة من الدكتور ولا من الكلية. ممكن يكون فيها أخطاء أو نقص، والأسئلة اللي فيها مش بالضرورة شبه الامتحان الحقيقي. ' +
+      '<b>ومبتغنيش أبداً عن الكتاب والمحاضرات (المصدر الأساسي)</b> — ذاكر منهم الأول، وارجع لهم عشان تتأكد من أي معلومة. أي اعتماد مباشر على الصفحات دي بيكون على مسئولية المستخدم نفسه، ومُعِدّ الملخص غير مسئول عن أي نتيجة أو خسارة درجات. ' +
+      '<span class="muted">' + SOURCES_AR + '</span>' +
+      '<div class="d-en"><b>Disclaimer:</b> Unofficial, student-made study notes shared to help classmates — not official course material and not endorsed by the instructor or the university. They may contain mistakes or omissions, and the practice questions may differ from the real exam. ' +
+      'These pages are <b>NOT a substitute for the textbook and the lectures</b> (the primary source): study those first and use them to verify anything written here. Anyone relying on these pages directly does so at their own risk; the author accepts no responsibility for any result or loss of marks. ' + SOURCES_EN + '</div></div>';
+    document.body.appendChild(f);
+  })();
+
+
+  /* ---------- self test (used while building; harmless in production) ---------- */
+  async function selftest() {
+    const res = { overflow: [], decks: {}, missing: [], badIdx: [] };
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const norm = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.innerHTML; };
+    for (let i = 0; i < stations.length; i++) {
+      go(i, true); await wait(40);
+      if (document.documentElement.scrollWidth > innerWidth + 1) res.overflow.push(i + 1);
+    }
+    $$('[data-flash]').forEach((el) => { if (!(DATA.flash || {})[el.dataset.flash]) res.missing.push('flash:' + el.dataset.flash); });
+    $$('[data-essay]').forEach((el) => { if (!(DATA.essays || {})[el.dataset.essay]) res.missing.push('essay:' + el.dataset.essay); });
+    for (const el of $$('[data-deck]')) {
+      const id = el.dataset.deck, cfg = (DATA.decks || {})[id];
+      if (!cfg) { res.missing.push('deck:' + id); continue; }
+      cfg.cards.forEach((c, k) => {
+        const o = c.opts || cfg.opts;
+        if (!(Number.isInteger(c.a) && c.a >= 0 && c.a < o.length)) res.badIdx.push(id + '#' + k);
+      });
+      let n = 0, guard = 0;
+      while (guard++ < 80) {
+        const qEl = $('.deck-q', el); if (!qEl) break;
+        const card = cfg.cards.find((c) => norm(c.q) === qEl.innerHTML);
+        if (!card) { res.decks[id] = 'NO MATCH: ' + qEl.innerHTML.slice(0, 50); break; }
+        const btns = $$('.opt', el); let idx;
+        if (card.opts) { const t = card.opts[card.a]; idx = btns.findIndex((b) => b.innerHTML === norm(typeof t === 'string' ? t : t.t)); } else idx = card.a;
+        if (idx < 0) { res.decks[id] = 'OPT NOT FOUND: ' + qEl.innerHTML.slice(0, 50); break; }
+        btns[idx].click(); n++; $('.nxt', el).click();
+      }
+      if (!res.decks[id]) { const e = $('.deck-end .big', el); res.decks[id] = (e ? e.textContent : '?') + ' (' + n + '/' + cfg.cards.length + ')'; }
+    }
+    S.done = {}; S.best = {}; save(); go(0, true); refresh();
+    return JSON.stringify(res);
+  }
+
+  /* ---------- start ---------- */
+  let start = parseInt((location.hash || '').slice(1), 10) - 1;
+  if (!(start >= 0 && start < stations.length)) start = Math.min(S.last || 0, stations.length - 1);
+  go(start, true);
+
+  window.Study = { go, strip, fmt, shuffle, selftest };
+})();
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = Study.fmt;
+  function parse(s) { return s.split(/[\s,;،]+/).filter(Boolean).map(Number).filter(isFinite); }
+  function stats(v, pop) {
+    var n = v.length, m = v.reduce(function (a, b) { return a + b; }, 0) / n;
+    var ss = v.reduce(function (a, b) { return a + (b - m) * (b - m); }, 0);
+    var d = pop ? n : n - 1, va = d > 0 ? ss / d : NaN;
+    return { n: n, m: m, ss: ss, va: va, sd: Math.sqrt(va), d: d };
+  }
+
+  /* intro strips */
+  Study.strip($('stA'), { vals: [78, 72, 71, 66, 63], lo: 30, hi: 100 });
+  Study.strip($('stB'), { vals: [96, 82, 70, 61, 41], lo: 30, hi: 100 });
+  Study.strip($('coA'), { vals: [73, 71, 66, 69, 76, 70], lo: 60, hi: 80, step: 5 });
+  Study.strip($('coB'), { vals: [66, 70, 71, 72, 70, 76], lo: 60, hi: 80, step: 5 });
+
+  /* station 1: spread slider */
+  var sp = $('spRange'), base = [-4, -2, 0, 2, 4];
+  function spread() {
+    var k = +sp.value, vals = base.map(function (d) { return 70 + d * k; });
+    Study.strip($('spStrip'), { vals: vals, lo: 30, hi: 110 });
+    var s = stats(vals, false);
+    $('spK').textContent = '×' + k;
+    $('spM').textContent = fmt(s.m);
+    $('spR').textContent = fmt(Math.max.apply(null, vals) - Math.min.apply(null, vals));
+    $('spS').textContent = fmt(s.sd);
+  }
+  sp.addEventListener('input', spread); spread();
+
+  /* station 2: range calculator */
+  var rgIn = $('rgIn'), rgDrop = $('rgDrop');
+  function rg() {
+    var v = parse(rgIn.value);
+    if (v.length < 2) { $('rgStrip').innerHTML = ''; $('rgCalc').textContent = '—'; $('rgOut').textContent = '—'; return; }
+    if (rgDrop.checked) { var mx = Math.max.apply(null, v); v.splice(v.indexOf(mx), 1); }
+    var lo = Math.min.apply(null, v), hi = Math.max.apply(null, v);
+    var o = Math.floor(lo / 10) * 10 - 10, p = Math.ceil(hi / 10) * 10 + 10;
+    Study.strip($('rgStrip'), { vals: v, lo: o, hi: p, mean: false });
+    $('rgCalc').textContent = fmt(hi) + ' − ' + fmt(lo);
+    $('rgOut').textContent = fmt(hi - lo);
+  }
+  rgIn.addEventListener('input', rg); rgDrop.addEventListener('change', rg); rg();
+
+  /* station 4: dispersion lab */
+  var labIn = $('labIn'), labTbl = $('labTbl'), mode = 's';
+  function lab() {
+    var v = parse(labIn.value), pop = mode === 'p';
+    if (v.length < 2) { labTbl.innerHTML = ''; $('labRes').innerHTML = ''; $('labV').textContent = 'اكتب رقمين على الأقل.'; return; }
+    var s = stats(v, pop), h = '<tr><th>i</th><th>x<sub>i</sub></th><th>x<sub>i</sub> − ' + (pop ? 'μ' : 'x̄') + '</th><th>(x<sub>i</sub> − ' + (pop ? 'μ' : 'x̄') + ')²</th></tr>', sd = 0;
+    v.forEach(function (x, i) {
+      var d = x - s.m; sd += d;
+      h += '<tr><td>' + (i + 1) + '</td><td>' + fmt(x) + '</td><td class="' + (d < 0 ? 'neg' : '') + '">' + fmt(d, 3) + '</td><td>' + fmt(d * d, 3) + '</td></tr>';
+    });
+    h += '<tr class="tot"><td>Σ</td><td>' + fmt(v.reduce(function (a, b) { return a + b; }, 0)) + '</td><td>' + fmt(sd, 3) + '</td><td>' + fmt(s.ss, 3) + '</td></tr>';
+    labTbl.innerHTML = h;
+    $('labRes').innerHTML =
+      '<div class="res"><small class="en plain">n</small><b>' + s.n + '</b></div>' +
+      '<div class="res"><small class="en plain">' + (pop ? 'μ' : 'x̄') + ' = mean</small><b>' + fmt(s.m, 3) + '</b></div>' +
+      '<div class="res"><small class="en plain">Σ(x − ' + (pop ? 'μ' : 'x̄') + ')²</small><b>' + fmt(s.ss, 3) + '</b></div>' +
+      '<div class="res"><small class="en plain">' + (pop ? 'σ²' : 'S²') + ' (÷ ' + s.d + ')</small><b>' + fmt(s.va, 3) + '</b></div>' +
+      '<div class="res pos"><small class="en plain">' + (pop ? 'σ' : 'S') + ' = SD</small><b>' + fmt(s.sd, 3) + '</b></div>' +
+      '<div class="res"><small class="en plain">Range</small><b>' + fmt(Math.max.apply(null, v) - Math.min.apply(null, v)) + '</b></div>';
+    var ok = Math.abs(sd) < 1e-9;
+    $('labV').className = 'verdict ' + (ok ? 'pos' : 'neg');
+    $('labV').textContent = ok ? '✔ مجموع الانحرافات = 0 ← حسابك سليم.' : '⚠ مجموع الانحرافات مش صفر (' + fmt(sd, 3) + ') — ممكن يكون بسبب التقريب أو غلط في الـ mean.';
+  }
+  labIn.addEventListener('input', lab);
+  $('labSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    mode = b.dataset.k;
+    Array.prototype.forEach.call($('labSeg').children, function (x) { x.classList.toggle('on', x === b); });
+    lab();
+  });
+  $('labPre').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    labIn.value = b.dataset.v.split(',').join(', ');
+    mode = b.dataset.k;
+    Array.prototype.forEach.call($('labSeg').children, function (x) { x.classList.toggle('on', x.dataset.k === mode); });
+    lab();
+  });
+  lab();
+
+  /* station 5: outlier lab */
+  var ol = $('olRange'), olBase = [20, 22, 24, 21, 25, 26, 25];
+  function outl() {
+    var x = +ol.value, vals = olBase.concat([x]), s = stats(vals, false);
+    $('olVal').textContent = x;
+    Study.strip($('olStrip'), { vals: vals, lo: 10, hi: 90, mean: true });
+    $('olR').textContent = fmt(Math.max.apply(null, vals) - Math.min.apply(null, vals));
+    $('olS').textContent = fmt(s.sd);
+  }
+  ol.addEventListener('input', outl); outl();
+})();
+</script>
+</body>
+</html>

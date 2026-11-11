@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BS201 · Lecture 6 — Conditional Probability, Independence &amp; Bayes</title>
+<style>
+/* ==========================================================
+   BS201 study pages — shared design system
+   ========================================================== */
+:root{
+  --bg:#0d1220; --card:#172038; --card2:#1d2848; --line:#2a3862;
+  --text:#eaf0ff; --muted:#9fb0d8;
+  --accent:#7aa8ff; --accent-rgb:122,168,255; --on-accent:#0a1226;
+  --ok:#4ade80; --ok-rgb:74,222,128;
+  --bad:#ff7b8c; --bad-rgb:255,123,140;
+  --warn:#fbbf24; --warn-rgb:251,191,36;
+  --c-plan:#4cc9f0; --c-plan-rgb:76,201,240;
+  --c-ana:#fbbf24;  --c-ana-rgb:251,191,36;
+  --c-des:#b69cff;  --c-des-rgb:182,156,255;
+  --c-imp:#4ade80;  --c-imp-rgb:74,222,128;
+  --shadow:0 12px 32px rgba(0,0,0,.35);
+  --radius:18px;
+}
+[data-theme="light"]{
+  --bg:#f5f2ea; --card:#ffffff; --card2:#f6f3ec; --line:#ddd6c3;
+  --text:#1b2336; --muted:#5a6684;
+  --accent:#2f66e0; --accent-rgb:47,102,224; --on-accent:#ffffff;
+  --ok:#15803d; --ok-rgb:21,128,61;
+  --bad:#c0263d; --bad-rgb:192,38,61;
+  --warn:#a85d00; --warn-rgb:168,93,0;
+  --c-plan:#0b84a8; --c-plan-rgb:11,132,168;
+  --c-ana:#b86e00;  --c-ana-rgb:184,110,0;
+  --c-des:#6b44e0;  --c-des-rgb:107,68,224;
+  --c-imp:#17803d;  --c-imp-rgb:23,128,61;
+  --shadow:0 10px 26px rgba(70,55,20,.12);
+}
+
+/* colour helpers: put on any element, children read --c / --c-rgb */
+.ph-plan{--c:var(--c-plan);--c-rgb:var(--c-plan-rgb)}
+.ph-ana{--c:var(--c-ana);--c-rgb:var(--c-ana-rgb)}
+.ph-des{--c:var(--c-des);--c-rgb:var(--c-des-rgb)}
+.ph-imp{--c:var(--c-imp);--c-rgb:var(--c-imp-rgb)}
+.t-ok{--c:var(--ok);--c-rgb:var(--ok-rgb)}
+.t-warn{--c:var(--warn);--c-rgb:var(--warn-rgb)}
+.t-bad{--c:var(--bad);--c-rgb:var(--bad-rgb)}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font:17px/1.85 "Segoe UI","Noto Sans Arabic",Tahoma,system-ui,sans-serif;
+  background:
+    radial-gradient(900px 480px at 85% -8%,rgba(var(--accent-rgb),.14),transparent 62%),
+    radial-gradient(700px 420px at 5% 14%,rgba(var(--c-des-rgb),.08),transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+}
+b,strong{font-weight:700}
+button{font-family:inherit}
+h2{font-size:32px;line-height:1.35;margin:0 0 6px}
+h3{font-size:20px;margin:0 0 10px}
+h4{font-size:17px;margin:0 0 8px}
+.sec{margin:30px 0 12px;font-size:21px}
+.sec small{color:var(--muted);font-weight:400;font-size:14px}
+.lead{color:var(--muted);margin:0 0 18px;font-size:18px}
+.muted{color:var(--muted)}
+.en{direction:ltr;unicode-bidi:isolate;font-family:"Segoe UI",system-ui,sans-serif;font-weight:600}
+.en.plain{font-weight:400}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;
+  padding:10px clamp(12px,3vw,28px);
+  background:var(--bg);
+  background:color-mix(in srgb,var(--bg) 84%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+}
+.home,.icon-btn{
+  width:40px;height:40px;display:grid;place-items:center;border-radius:12px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);
+  text-decoration:none;font-size:18px;cursor:pointer;flex:none;
+}
+.home:hover,.icon-btn:hover{border-color:var(--accent)}
+.ttl{display:flex;flex-direction:column;line-height:1.3}
+.ttl small{color:var(--muted);font-size:13px}
+.prog{margin-inline-start:auto;display:flex;align-items:center;gap:10px;min-width:150px;color:var(--muted);font-size:14px}
+.bar{flex:1;height:9px;border-radius:99px;background:rgba(var(--accent-rgb),.16);overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--c-imp));transition:width .5s}
+
+/* ---------- layout + nav ---------- */
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:26px;max-width:1160px;margin:0 auto;padding:24px clamp(12px,3vw,24px) 70px;align-items:start}
+.nav{position:sticky;top:78px;display:flex;flex-direction:column;gap:6px}
+.nav button{
+  display:flex;align-items:center;gap:10px;text-align:start;width:100%;
+  background:transparent;border:1px solid transparent;color:var(--muted);
+  padding:9px 12px;border-radius:14px;cursor:pointer;font-size:15px;transition:.18s;
+}
+.nav button:hover{background:rgba(var(--accent-rgb),.08);color:var(--text)}
+.nav .num{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--card2);border:1px solid var(--line)}
+.nav .lbl{flex:1}
+.nav .tick{opacity:0;color:var(--ok);font-weight:800}
+.nav button.on{background:var(--card);border-color:var(--line);color:var(--text);box-shadow:var(--shadow)}
+.nav button.on .num{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.nav button.done .tick{opacity:1}
+
+/* ---------- stations ---------- */
+.station{display:none}
+.station.on{display:block;animation:rise .45s ease}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.station-foot{display:flex;justify-content:space-between;gap:12px;margin-top:34px;padding-top:18px;border-top:1px dashed var(--line)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin:16px 0}
+.card.tint{border-top:4px solid var(--c)}
+.card.tint h4{color:var(--c)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:14px;
+  border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px;font-weight:600;
+  cursor:pointer;transition:.18s;text-decoration:none;
+}
+.btn:hover{transform:translateY(-1px);border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:transparent}
+.btn.good{background:rgba(var(--ok-rgb),.16);border-color:rgba(var(--ok-rgb),.55)}
+.btn.bad{background:rgba(var(--bad-rgb),.14);border-color:rgba(var(--bad-rgb),.5)}
+.btn.ghost{background:transparent}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 14px;margin:4px;border-radius:999px;font-size:15px;line-height:1.7;
+  background:rgba(var(--c-rgb,var(--accent-rgb)),.14);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.45);
+}
+.chip.en{font-weight:600}
+.note{margin:14px 0;padding:12px 16px;border-radius:14px;background:rgba(var(--c-rgb,var(--accent-rgb)),.1);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.38)}
+.note.warn{--c-rgb:var(--warn-rgb)}
+.note.ok{--c-rgb:var(--ok-rgb)}
+.note.bad{--c-rgb:var(--bad-rgb)}
+
+/* ---------- tabs / panes / segmented ---------- */
+.pane{display:none}
+.pane.on{display:block;animation:rise .35s ease}
+.seg{display:inline-flex;gap:6px;padding:5px;border-radius:16px;background:var(--card2);border:1px solid var(--line);flex-wrap:wrap;margin-bottom:14px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:9px 18px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:.18s}
+.seg button.on{background:rgba(var(--c-rgb,var(--accent-rgb)),.2);color:var(--text);box-shadow:inset 0 0 0 1.5px rgba(var(--c-rgb,var(--accent-rgb)),.7)}
+
+/* ---------- big picture ---------- */
+.story{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+.beat{flex:1;min-width:150px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:14px;border-radius:16px;background:rgba(var(--bad-rgb),.1);border:1px solid rgba(var(--bad-rgb),.4)}
+.beat.ok{background:rgba(var(--ok-rgb),.12);border-color:rgba(var(--ok-rgb),.5)}
+.beat .emo{font-size:30px;line-height:1.3}
+.arrow{align-self:center;font-size:22px;color:var(--muted)}
+.punch{text-align:center;font-size:20px;font-weight:700;margin:16px 0 12px}
+.tile{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;padding:18px;border-radius:18px;
+  border:1px solid rgba(var(--c-rgb),.45);background:linear-gradient(155deg,rgba(var(--c-rgb),.2),var(--card) 72%);
+  color:var(--text);cursor:pointer;transition:.2s;font-size:17px;
+}
+.tile:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.tile .emo{font-size:30px;line-height:1.3}
+.tile small{color:var(--muted);font-size:14.5px}
+
+/* ---------- translator diagram ---------- */
+.trans{display:flex;align-items:center;justify-content:center;gap:8px;direction:ltr;flex-wrap:wrap;margin-bottom:16px}
+.trans>*{direction:rtl}
+.tnode{
+  display:flex;flex-direction:column;align-items:center;gap:0;min-width:160px;padding:14px 18px;border-radius:18px;
+  border:1.5px solid rgba(var(--c-rgb),.4);background:rgba(var(--c-rgb),.1);color:var(--text);cursor:pointer;transition:.2s;font-size:16px;
+}
+.tnode .emo{font-size:30px;line-height:1.3}
+.tnode.on{background:rgba(var(--c-rgb),.24);border-color:var(--c);transform:translateY(-3px);box-shadow:0 8px 22px rgba(var(--c-rgb),.25)}
+.tlink{font-size:26px;color:var(--muted)}
+.bigq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.bigq .chip{font:800 20px/1.5 "Segoe UI",sans-serif;padding:6px 20px}
+
+/* ---------- flip cards (roles) ---------- */
+.flip{perspective:1000px;cursor:pointer;outline:none}
+.flip-in{display:grid;min-height:170px;transition:transform .55s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.flip.open .flip-in{transform:rotateY(180deg)}
+.flip .face{
+  grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px;padding:16px 18px;
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:4px;
+  border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.5);
+  background:linear-gradient(155deg,rgba(var(--c-rgb,var(--accent-rgb)),.2),var(--card) 75%);
+}
+.flip .front .emo{font-size:32px;line-height:1.3}
+.flip .front b{font-size:18px}
+.flip .front small{color:var(--muted)}
+.flip .back{transform:rotateY(180deg);background:var(--card2);font-size:16px;line-height:1.75}
+.flip:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:18px}
+.hint{color:var(--muted);font-size:13px}
+
+/* ---------- SDLC path ---------- */
+.path{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;direction:ltr;margin:6px 0 18px}
+.node{
+  position:relative;direction:rtl;display:flex;flex-direction:column;align-items:center;gap:2px;padding:16px 10px;border-radius:20px;
+  border:1.5px solid rgba(var(--c-rgb),.4);background:rgba(var(--c-rgb),.09);color:var(--text);cursor:pointer;transition:.22s;text-align:center;font-size:15px;
+}
+.node i{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:800 24px/1 "Segoe UI",sans-serif;font-style:normal;background:rgba(var(--c-rgb),.25);color:var(--c);margin-bottom:4px;transition:.22s}
+.node b{font-size:18px;font-family:"Segoe UI",sans-serif}
+.node small{color:var(--muted);font-size:13.5px;line-height:1.4}
+.node:not(:last-child)::after{content:"➜";position:absolute;right:-22px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+.node.on{background:rgba(var(--c-rgb),.22);border-color:var(--c);transform:translateY(-4px);box-shadow:0 12px 26px rgba(var(--c-rgb),.28)}
+.node.on i{background:var(--c);color:var(--bg)}
+.node b,.node small,.ph-head .q,.tile b.en{direction:ltr;unicode-bidi:isolate}
+.mnemo{text-align:center;font-size:19px;margin:0 0 14px;color:var(--muted)}
+.mnemo b{color:var(--text)}
+.panel{background:var(--card);border:1px solid rgba(var(--c-rgb),.5);border-top:5px solid var(--c);border-radius:18px;padding:20px 22px;box-shadow:var(--shadow)}
+.ph-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ph-head .q{font:800 24px/1.3 "Segoe UI",sans-serif;color:var(--c);padding:4px 16px;border-radius:12px;background:rgba(var(--c-rgb),.15)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0}
+.steps li{counter-increment:s;position:relative;padding:6px 0;padding-inline-start:50px;margin:6px 0}
+.steps li::before{content:counter(s);position:absolute;inset-inline-start:0;top:6px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:rgba(var(--c-rgb),.2);color:var(--c)}
+.deliv{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+
+/* ---------- BPM ---------- */
+.cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;direction:ltr}
+.cycle>div{direction:rtl;padding:14px;border-radius:16px;background:var(--card2);border:1px solid var(--line);font-size:15.5px;line-height:1.65}
+.cycle .n{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-weight:800;margin-bottom:6px}
+.loopnote{text-align:center;color:var(--muted);margin:10px 0 0}
+.range-wrap{direction:ltr;padding:6px 6px 0}
+.range-wrap input{width:100%;height:10px;accent-color:var(--accent);cursor:pointer}
+.ticks{display:flex;justify-content:space-between;direction:ltr;font:800 16px "Segoe UI",sans-serif;margin-top:8px}
+.ticks span{cursor:pointer;padding:4px 14px;border-radius:10px;color:var(--muted);transition:.18s}
+.ticks span.on{background:rgba(var(--c-rgb),.22);color:var(--text)}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:16px 0 8px}
+.metric small{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:4px}
+.meter{direction:ltr;position:relative;height:12px;border-radius:99px;background:linear-gradient(90deg,var(--ok),var(--warn),var(--bad));overflow:hidden}
+.meter i{position:absolute;top:0;bottom:0;right:0;width:100%;background:var(--card2);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- decks (games / quiz) ---------- */
+.deck{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px 22px;box-shadow:var(--shadow);margin:14px 0}
+.deck-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;color:var(--muted);font-size:15px}
+.cnt,.fc-count{direction:ltr;unicode-bidi:isolate}
+.deck-bar{flex:1;height:8px;border-radius:99px;background:rgba(var(--accent-rgb),.16);overflow:hidden}
+.deck-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--c-imp));transition:width .4s}
+.deck-q{font-size:21px;font-weight:600;line-height:1.7;margin:4px 0 16px;min-height:56px}
+.opts{display:grid;gap:10px}
+.opts.c2{grid-template-columns:repeat(2,1fr)}
+.opts.c3{grid-template-columns:repeat(3,1fr)}
+.opt{
+  text-align:start;padding:13px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);
+  color:var(--text);font-size:17px;cursor:pointer;transition:.18s;line-height:1.6;
+}
+.opt.ph-plan,.opt.ph-ana,.opt.ph-des,.opt.ph-imp,.opt.t-ok,.opt.t-warn,.opt.t-bad{border-color:rgba(var(--c-rgb),.55);background:rgba(var(--c-rgb),.1);font-weight:600}
+.opt:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:rgba(var(--ok-rgb),.2)}
+.opt.wrong{border-color:var(--bad);background:rgba(var(--bad-rgb),.2)}
+.fb{margin-top:16px;padding:14px 16px;border-radius:14px;animation:rise .3s ease}
+.fb.ok{background:rgba(var(--ok-rgb),.13);border:1px solid rgba(var(--ok-rgb),.5)}
+.fb.no{background:rgba(var(--bad-rgb),.12);border:1px solid rgba(var(--bad-rgb),.5)}
+.fb .btn{margin-top:10px}
+.deck-end{text-align:center;padding:12px 0}
+.deck-end .big{font:800 56px/1.2 "Segoe UI",sans-serif;color:var(--accent)}
+
+/* ---------- flashcards ---------- */
+.fc{background:transparent}
+.fc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.fc-top .seg{margin:0}
+.fc-card{perspective:1200px;cursor:pointer;outline:none;margin:10px 0 14px}
+.fc-in{display:grid;min-height:270px;transition:transform .6s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.fc-card.open .fc-in{transform:rotateY(180deg)}
+.fc-in .face{
+  grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:24px;padding:28px;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:12px;
+  border:1px solid var(--line);font-size:23px;line-height:1.7;box-shadow:var(--shadow);
+}
+.fc-in .front{background:linear-gradient(160deg,rgba(var(--accent-rgb),.22),var(--card))}
+.fc-in .back{background:linear-gradient(160deg,rgba(var(--ok-rgb),.18),var(--card));transform:rotateY(180deg);font-size:19.5px}
+.fc-in small{color:var(--muted);font-size:13.5px}
+.fc-card:focus-visible .fc-in .front{outline:2px solid var(--accent)}
+.fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+.fc-stat{text-align:center;margin:8px 0 0}
+
+/* ---------- essay ---------- */
+.essay textarea{width:100%;min-height:110px;resize:vertical;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:16px/1.7 "Segoe UI",sans-serif;margin:8px 0 12px}
+.essay textarea:focus{outline:none;border-color:var(--accent)}
+.model{margin-top:14px;animation:rise .3s ease}
+.mdl{padding:14px 16px;border-radius:14px;background:rgba(var(--ok-rgb),.1);border:1px solid rgba(var(--ok-rgb),.4);margin-bottom:12px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.chk input{width:20px;height:20px;margin-top:5px;accent-color:var(--ok);flex:none}
+.pts-sc{font-weight:700;margin-top:6px;color:var(--ok)}
+
+/* ---------- tables (summary) ---------- */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line);font-size:15.5px;line-height:1.65;margin:8px 0 18px}
+.tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top}
+.tbl tr:last-child td{border-bottom:0}
+.tbl th{background:var(--card2);font-size:14.5px;color:var(--muted)}
+.tbl td:first-child{font-weight:700;white-space:nowrap}
+.tbl .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:8px}
+
+/* ---------- calculators / inputs ---------- */
+.calc-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.calc-top label{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.calc input[type=number]{width:100%;max-width:132px;padding:7px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:600 16px "Segoe UI",sans-serif;direction:ltr;text-align:right}
+.calc input[type=number]:focus{outline:none;border-color:var(--accent)}
+.calc-top input[type=number]{max-width:90px}
+.calc input[type=range]{accent-color:var(--accent);cursor:pointer;direction:ltr;width:170px}
+main{min-width:0}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0;direction:ltr}
+.ctbl{min-width:680px;direction:ltr;margin:0}
+.ctbl th,.ctbl td{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ctbl th:first-child,.ctbl td:first-child{text-align:left}
+.ctbl input[type=number]{min-width:112px}
+.tbl.ctbl td:first-child{white-space:nowrap}
+.ctbl.sm{min-width:0}
+.ctbl.sm input[type=number]{min-width:0}
+.ctbl.sm th,.ctbl.sm td{white-space:normal}
+.tbl.ctbl.sm td:first-child{white-space:nowrap}
+.ctbl .neg{color:var(--bad)}
+.ctbl .pos{color:var(--ok)}
+.ctbl tr.tot td{background:var(--card2);font-weight:700}
+.res-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:12px;margin-top:14px}
+.res{padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+.res small{display:block;color:var(--muted);font-size:14px}
+.res b{display:block;font:800 22px/1.5 "Segoe UI",sans-serif;direction:ltr;unicode-bidi:isolate;text-align:start}
+.res.pos{border-color:rgba(var(--ok-rgb),.6);background:rgba(var(--ok-rgb),.12)}
+.res.neg{border-color:rgba(var(--bad-rgb),.6);background:rgba(var(--bad-rgb),.12)}
+.verdict{margin-top:14px;padding:12px 16px;border-radius:14px;font-weight:700;font-size:18px;background:var(--card2);border:1px solid var(--line)}
+.verdict.pos{background:rgba(var(--ok-rgb),.14);border-color:rgba(var(--ok-rgb),.55)}
+.verdict.neg{background:rgba(var(--bad-rgb),.13);border-color:rgba(var(--bad-rgb),.55)}
+.checks{display:grid;gap:4px;margin-bottom:10px}
+.checks .chk{padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);margin:0}
+.checks .chk:hover{border-color:var(--accent)}
+.formula{direction:ltr;unicode-bidi:isolate;text-align:center;font:700 19px/1.9 "Segoe UI",sans-serif;padding:12px 16px;border-radius:14px;background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.4);margin:12px 0}
+.formula small{display:block;font:400 14px "Segoe UI",sans-serif;color:var(--muted)}
+
+/* ---------- share disclaimer (footer injected by core.js) ---------- */
+.disclaimer{max-width:1160px;margin:0 auto;padding:0 clamp(12px,3vw,24px) 46px}
+.disclaimer>div{padding:14px 18px;border-radius:16px;border:1px solid rgba(var(--warn-rgb),.5);background:rgba(var(--warn-rgb),.08);font-size:14.5px;line-height:1.85;color:var(--muted)}
+.disclaimer b{color:var(--text)}
+.disclaimer .d-en{direction:ltr;text-align:left;margin-top:10px;padding-top:10px;border-top:1px dashed rgba(var(--warn-rgb),.4);font-family:"Segoe UI",system-ui,sans-serif;font-size:13.5px;line-height:1.7}
+
+
+/* ---------- BS201 additions: math bits, strip, proof, text inputs ---------- */
+.nb{white-space:nowrap}
+.ov{text-decoration:overline;font-style:normal}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 5px;line-height:1.45}
+.fr>span:first-child{border-bottom:2px solid currentColor;padding:0 6px}
+.fr>span:last-child{padding:0 6px}
+.calc input[type=text]{width:100%;max-width:420px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card2);color:var(--text);font:600 16px "Segoe UI",sans-serif;direction:ltr;text-align:left}
+.calc input[type=text]:focus{outline:none;border-color:var(--accent)}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.presets .btn{padding:5px 12px;font-size:14px;border-radius:12px}
+.strip{width:100%;height:auto;display:block;direction:ltr}
+.strip .ax{stroke:var(--line);stroke-width:2}
+.strip .tk{fill:var(--muted);font:12px "Segoe UI",sans-serif;text-anchor:middle}
+.strip .rg{stroke:var(--c,var(--accent));stroke-width:2.5}
+.strip .rgt{fill:var(--c,var(--accent));font:800 14px "Segoe UI",sans-serif;text-anchor:middle}
+.strip .mn{stroke:var(--warn);stroke-dasharray:4 3;stroke-width:2}
+.strip .mnt{fill:var(--warn);font:700 13px "Segoe UI",sans-serif;text-anchor:middle}
+.strip circle{fill:var(--c,var(--accent));stroke:var(--bg);stroke-width:2}
+.strip-row{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;margin:6px 0}
+.strip-row>b{font-size:15px}
+.proof{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.proof .ps{display:none;gap:12px;align-items:flex-start;padding:10px 12px;margin:8px 0;border-radius:14px;background:var(--card2);border:1px solid var(--line)}
+.proof .ps.on{display:flex;animation:rise .35s ease}
+.proof .pn{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 14px "Segoe UI",sans-serif;background:rgba(var(--accent-rgb),.2);color:var(--accent)}
+.proof .pb{flex:1;min-width:0}
+.proof .pb .formula{margin:2px 0}
+.proof .pwhy{color:var(--muted);font-size:15px;margin-top:4px}
+.proof-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.sl-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.sl-row input[type=range]{flex:1;min-width:180px;max-width:420px;width:auto}
+.sl-row b.en{min-width:54px;display:inline-block;text-align:center}
+.tbl .num{text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;padding:0 10px;border-radius:99px;background:rgba(var(--c-rgb,var(--accent-rgb)),.18);border:1px solid rgba(var(--c-rgb,var(--accent-rgb)),.5);font:700 13px "Segoe UI",sans-serif}
+
+
+/* ---------- order-the-steps game ---------- */
+.order{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin:14px 0}
+.order .o-head{margin-bottom:8px}
+.order .o-ans{list-style:decimal;padding-inline-start:30px;margin:8px 0}
+.order .o-ans li{margin:6px 0;padding:8px 12px;border-radius:12px;background:rgba(var(--ok-rgb),.12);border:1px solid rgba(var(--ok-rgb),.5);font-family:"Segoe UI",sans-serif;font-weight:600;direction:ltr;text-align:left}
+.order .o-pool{display:grid;gap:8px;margin:10px 0}
+.order .o-btn{text-align:left;direction:ltr;font-family:"Segoe UI",sans-serif;font-weight:600}
+.order .o-btn.wrong{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.order .o-msg{min-height:26px;margin:6px 0;color:var(--muted);font-weight:600}
+.order .o-msg.good{color:var(--ok)}
+.order .o-msg.bad{color:var(--bad)}
+.venn{width:100%;max-width:420px;height:auto;display:block;margin:8px auto;direction:ltr}
+.venn .box{fill:none;stroke:var(--line);stroke-width:2}
+.venn .lbl{fill:var(--text);font:700 15px "Segoe UI",sans-serif;text-anchor:middle}
+.venn .sm{fill:var(--muted);font:600 12.5px "Segoe UI",sans-serif;text-anchor:middle}
+.venn .ca{fill:rgba(var(--c-plan-rgb),.28);stroke:var(--c-plan);stroke-width:2.5}
+.venn .cb{fill:rgba(var(--c-ana-rgb),.22);stroke:var(--c-ana);stroke-width:2.5}
+.venn .ci{fill:rgba(var(--c-imp-rgb),.45)}
+.venn .cc{fill:rgba(var(--c-des-rgb),.35)}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;gap:12px;padding-top:12px}
+  .nav{position:sticky;top:60px;z-index:20;flex-direction:row;overflow-x:auto;gap:6px;padding:8px 2px;background:var(--bg)}
+  .nav{scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{width:auto;flex:none;padding:6px 10px}
+  .nav button:not(.on) .lbl{display:none}
+  .nav .tick{display:none}
+  .nav button.done .num{background:var(--ok);color:#06210f;border-color:transparent}
+  .ttl small{display:none}
+}
+@media (max-width:700px){
+  body{font-size:16px}
+  h2{font-size:26px}
+  .path{grid-template-columns:repeat(2,1fr);gap:12px}
+  .node::after{display:none!important}
+  .cycle{grid-template-columns:repeat(2,1fr)}
+  .opts.c3{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr}
+  .prog{min-width:0}
+  .tbl{font-size:14px}
+  .tbl th,.tbl td{padding:8px 7px}
+  .tbl td:first-child{white-space:normal}
+  .prog .bar{min-width:50px}
+  .card.calc{padding:16px 10px}
+  .calc input[type=number]{padding:6px 4px;font-size:15px}
+  .ctbl.sm th,.ctbl.sm td{padding:8px 4px}
+}
+@media (max-width:700px){
+  .strip-row{grid-template-columns:1fr;gap:0}
+  .strip-row>b{margin-bottom:-4px}
+  .proof{padding:12px 10px}
+  .sl-row input[type=range]{min-width:140px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ---------- print: only the summary station ---------- */
+@media print{
+  :root,[data-theme="dark"],[data-theme="light"]{--bg:#fff;--card:#fff;--card2:#f3f3f3;--line:#ccc;--text:#111;--muted:#444;--shadow:none}
+  body{background:#fff!important;font-size:12pt;line-height:1.55}
+  .topbar,.nav,.station-foot,.noprint{display:none!important}
+  .layout{display:block;padding:0}
+  .station{display:none!important}
+  .station.summary{display:block!important}
+  .card,.panel{box-shadow:none;break-inside:avoid}
+  .tbl{break-inside:avoid}
+}
+
+</style>
+<style>
+.pick{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.pick .btn{padding:6px 14px;font-size:15px}
+.pick .btn.on{background:rgba(var(--c-plan-rgb),.3);border-color:var(--c-plan)}
+.pick .btn.on2{background:rgba(var(--c-ana-rgb),.3);border-color:var(--c-ana)}
+.tw{width:100%;border-collapse:separate;border-spacing:4px;direction:ltr;text-align:center}
+.tw th{color:var(--muted);font:700 13px "Segoe UI",sans-serif;padding:4px}
+.tw td{padding:10px 4px;border-radius:10px;background:var(--card2);border:1.5px solid var(--line);font:700 16px "Segoe UI",sans-serif}
+.tw td.inb{background:rgba(var(--c-plan-rgb),.2);border-color:var(--c-plan)}
+.tw td.ina{box-shadow:inset 0 0 0 3px var(--c-ana)}
+.tw td.tot{background:transparent;border-style:dashed;color:var(--muted)}
+.bt{width:100%;border-collapse:separate;border-spacing:0 6px;direction:ltr}
+.bt th{font:700 13px "Segoe UI",sans-serif;color:var(--muted);text-align:center;padding:2px 4px}
+.bt td{padding:4px 6px;background:var(--card2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:center;font:700 15px "Segoe UI",sans-serif}
+.bt td:first-child{border-radius:10px 0 0 10px;border-left:1px solid var(--line)}
+.bt td:last-child{border-radius:0 10px 10px 0;border-right:1px solid var(--line)}
+.bt input{width:84px;padding:5px 6px;border-radius:8px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);font:600 15px "Segoe UI",sans-serif;text-align:center;direction:ltr}
+.bt td.post{color:var(--ok)}
+</style>
+</head>
+<body data-lecture="l6">
+
+<header class="topbar">
+  <a class="home" href="index.html" title="القائمة الرئيسية">🏠</a>
+  <div class="ttl"><b>BS201 · Lecture 6</b><small class="en plain">Conditional Probability, Independent Events &amp; Bayes' Theorem</small></div>
+  <div class="prog"><div class="bar"><i id="progBar"></i></div><span id="progTxt">0/8</span></div>
+  <button id="themeBtn" class="icon-btn" type="button" title="فاتح / داكن">☀️</button>
+</header>
+
+<div class="layout">
+<nav class="nav" id="nav" aria-label="محطات المحاضرة"></nav>
+<main>
+
+<!-- =====================================================  1 · BIG PICTURE -->
+<section class="station" data-icon="🗺️" data-title="الصورة الكبيرة">
+  <h2>الصورة الكبيرة 🗺️</h2>
+  <p class="lead">آخر محاضرة في الامتحان. فكرتها: <b>معلومة جديدة بتغيّر الاحتمال</b>. «احتمال A <b>لو عرفنا</b> إن B حصل».</p>
+
+  <div class="card">
+    <div class="story">
+      <div class="beat"><div class="emo">🔎</div><b>شرطي</b><span><span class="en">P(A|B)</span>: فراغ العينة بيصغر لـ <span class="en">B</span></span></div>
+      <div class="arrow">⬅</div>
+      <div class="beat ok"><div class="emo">🔗</div><b>مستقلين</b><span><span class="en">P(A|B) = P(A)</span>: المعلومة ما غيّرتش حاجة</span></div>
+      <div class="arrow">⬅</div>
+      <div class="beat ok"><div class="emo">🔄</div><b class="en">Bayes</b><span>نعكس الشرط: من <span class="en">P(B|Aᵢ)</span> لـ <span class="en">P(Aᵢ|B)</span></span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">خريطة المحاضرة <small>(اضغط على أي مربع تروحله)</small></h3>
+  <div class="grid g4">
+    <button type="button" class="tile ph-plan" data-go="2"><span class="emo">🔎</span><b>الاحتمال الشرطي</b><small>+ جدول تفاعلي</small></button>
+    <button type="button" class="tile ph-ana" data-go="3"><span class="emo">🔗</span><b>الأحداث المستقلة</b><small>+ سحب الكرات</small></button>
+    <button type="button" class="tile ph-des" data-go="4"><span class="emo">🔄</span><b class="en">Bayes</b><small>الاحتمال الكلي + حاسبة</small></button>
+  </div>
+  <div class="note">📌 <b>الامتحان:</b> ٨ <span class="en">T/F</span> + ٨ <span class="en">MCQ</span> + <span class="en">Essay</span> (٢٠ درجة). <span class="en">Bayes</span> مكتوب في السلايدات لكن إثباته <b>مش</b> في فولدر <span class="en">Proofs</span> — فاعتبره اختياري (بس القانون مهم).</div>
+</section>
+
+<!-- =====================================================  2 · CONDITIONAL -->
+<section class="station" data-icon="🔎" data-title="الاحتمال الشرطي">
+  <h2>الاحتمال الشرطي <span class="en">Conditional Probability</span> 🔎</h2>
+
+  <div class="card tint ph-plan">
+    <div class="formula"><span class="en">P(A | B) = <span class="fr"><span>P(A and B)</span><span>P(B)</span></span> , P(B) &gt; 0</span></div>
+    <p style="margin:0">احتمال حدوث <span class="en">A</span> <b>بشرط</b> حدوث <span class="en">B</span>. زي ما تكون <span class="en">B</span> هي فراغ العينة الجديد.</p>
+  </div>
+
+  <div class="grid g2">
+    <div class="card" style="margin:0"><h4>خواص الاحتمال الشرطي (من السلايد)</h4>
+      <ol class="steps ph-plan" style="margin:0"><li><span class="en">0 ≤ P(B|A) ≤ 1</span></li><li><span class="en">P(S|A) = 1 , P(A|A) = 1</span></li><li><span class="en">P(A∩B) = P(A)·P(B|A)</span> لو <span class="en">P(A) ≠ 0</span><br>= <span class="en">P(B)·P(A|B)</span> لو <span class="en">P(B) ≠ 0</span></li></ol></div>
+    <div class="card" style="margin:0"><h4>لو <span class="en">A</span> مستقل عن <span class="en">B</span></h4>
+      <div class="formula" style="font-size:16px"><span class="en">P(A|B) = <span class="fr"><span>P(A)P(B)</span><span>P(B)</span></span> = P(A)</span></div></div>
+  </div>
+
+  <h3 class="sec">🧪 جدول تفاعلي (مثال 2.28: 90 مشاهد)</h3>
+  <div class="card calc ph-plan">
+    <p style="margin:0 0 4px"><b>B (الشرط)</b> — اللي عرفنا إنه حصل:</p><div class="pick" id="pkB"></div>
+    <p style="margin:0 0 4px"><b>A (المطلوب)</b>:</p><div class="pick" id="pkA"></div>
+    <table class="tw" id="tw"></table>
+    <div class="res-row" id="twRes"></div>
+    <div class="verdict" id="twV"></div>
+  </div>
+  <div class="note ok">📖 <b>الكتاب:</b> (1) <span class="en">P(Sport | Female) = 10/45 = 2/9</span> · (2) <span class="en">P(Male | News) = 5/10 = 1/2</span>. جرّبهم في الجدول: اختار <span class="en">B = Female</span> و <span class="en">A = Sport</span>، وبعدين <span class="en">B = News</span> و <span class="en">A = Male</span>.</div>
+
+  <h3 class="sec">🎯 أمثلة الكتاب (2.25 – 2.29)</h3>
+  <div data-deck="ex"></div>
+  <div class="note">🧠 <b>مثال 2.27 (حبوب منبهة وقهوة):</b> <span class="en">P(A)=0.10 , P(B)=0.30 , P(A∩B)=0.05</span> ← لا حبوب ولا قهوة <span class="en">= 1 − (0.10+0.30−0.05) = 0.65</span> · قهوة بشرط حبوب <span class="en">= 0.05/0.10 = 0.50</span> · حبوب بشرط مفيش قهوة <span class="en">= (0.10−0.05)/0.70 = 0.071</span>.<br>
+  <b>مثال 2.29 (3 أطفال):</b> بنتين بشرط الكبرى بنت <span class="en">= (2/8)/(4/8) = 1/2</span> · بشرط بنت واحدة على الأقل <span class="en">= (3/8)/(7/8) = 3/7</span>.</div>
+</section>
+
+<!-- =====================================================  3 · INDEPENDENCE -->
+<section class="station" data-icon="🔗" data-title="الأحداث المستقلة">
+  <h2>الأحداث المستقلة <span class="en">Independent Events</span> 🔗</h2>
+
+  <div class="card tint ph-ana">
+    <p style="margin:0 0 6px">حدثين مستقلين لو حدوث واحد منهم <b>ما بيعتمدش</b> على التاني: <span class="en">P(A|B) = P(A)</span> و <span class="en">P(B|A) = P(B)</span>.</p>
+    <div class="formula"><span class="en">A , B independent ⟺ P(A ∩ B) = P(A) · P(B)</span><small>الشرط الضروري والكافي</small></div>
+    <p style="margin:0">ولمجموعة أحداث <span class="en">A₁ … Aₙ</span>: مستقلة لو القاعدة صحيحة لكل زوج (<span class="en">Aᵢ∩Aⱼ</span>) ولكل تلاتة (<span class="en">Aᵢ∩Aⱼ∩Aₖ</span>) ... ولكلهم <span class="en">P(∩Aᵢ) = ∏ P(Aᵢ)</span>.</p>
+  </div>
+
+  <h3 class="sec">🧪 اختبر الاستقلال</h3>
+  <div class="card calc ph-ana">
+    <div class="calc-top"><label>P(A): <input type="number" id="iA" value="0.5" step="0.05" min="0" max="1"></label><label>P(B): <input type="number" id="iB" value="0.4" step="0.05" min="0" max="1"></label><label>P(A∩B): <input type="number" id="iAB" value="0.2" step="0.05" min="0" max="1"></label></div>
+    <div class="presets" id="iPre"><button type="button" class="btn" data-v="0.5,0.4,0.2">مستقلين</button><button type="button" class="btn" data-v="0.5,0.4,0.3">مش مستقلين</button><button type="button" class="btn" data-v="0.3,0.4,0">متنافيين</button></div>
+    <div class="res-row" id="iRes"></div>
+    <div class="verdict" id="iV"></div>
+  </div>
+  <div class="note warn">🔑 <b>متنافيين ≠ مستقلين:</b> المتنافيين <span class="en">P(A∩B) = 0</span>؛ المستقلين <span class="en">P(A∩B) = P(A)P(B)</span>. لو الاتنين احتمالهم أكبر من 0 فالمتنافيين <b>مش</b> مستقلين (لأن حدوث واحد بيمنع التاني). <span class="muted">(استنتاج من التعريف، مش جملة منصوصة في الكتاب.)</span></div>
+
+  <h3 class="sec">🧪 مثال 2.29 (ثاني): سحب 3 كرات بيضا <small>(صندوق: بيضا وسودا)</small></h3>
+  <div class="card calc ph-imp">
+    <div class="calc-top"><label>عدد البيضا: <input type="number" id="bW" value="7" min="1" max="30" step="1"></label><label>عدد السودا: <input type="number" id="bK" value="3" min="0" max="30" step="1"></label></div>
+    <div class="res-row" id="bRes"></div>
+    <div class="verdict" id="bV"></div>
+  </div>
+  <div class="note ok">📖 <b>الكتاب (7 بيضا، 3 سودا):</b> (1) مع الإحلال <span class="en">(7/10)³ = 0.343</span> · (2) بدون إحلال <span class="en">7/10 × 6/9 × 5/8 = 0.29</span> (0.2917).</div>
+  <div class="note warn">📖 <b>الحالة (3) «الكرة الأولى بس بترجع»:</b> السلايد كاتب <span class="en">0.226</span>، لكن الحساب <span class="en">7/10 × 7/10 × 6/9 = 0.3267</span> (الأولى بتترجع فالتانية من 10 كرات، والتالتة من 9). اتبع القاعدة والأرقام مش الناتج المكتوب.</div>
+</section>
+
+<!-- =====================================================  4 · TOTAL + BAYES -->
+<section class="station" data-icon="🔄" data-title="Bayes والاحتمال الكلي">
+  <h2>الاحتمال الكلي و<span class="en">Bayes</span> 🔄</h2>
+  <p class="lead">عندنا تقسيم لفراغ العينة <span class="en">A₁ … Aₙ</span> (متنافية واتحادها = <span class="en">S</span>)، وحدث <span class="en">B</span> ممكن يحصل مع أي منهم.</p>
+
+  <div class="grid g2">
+    <div class="card tint ph-ana" style="margin:0"><h4>قانون الاحتمال الكلي <span class="en">Total Probability</span></h4><div class="formula"><span class="en">P(B) = Σ P(B|Aᵢ) · P(Aᵢ)</span></div></div>
+    <div class="card tint ph-des" style="margin:0"><h4>قانون <span class="en">Bayes</span></h4><div class="formula"><span class="en">P(Aᵢ|B) = <span class="fr"><span>P(B|Aᵢ) · P(Aᵢ)</span><span>Σ P(B|Aⱼ) · P(Aⱼ)</span></span></span></div></div>
+  </div>
+  <div class="note">🧠 <b>الفكرة:</b> البسط = احتمال المسار ده (<span class="en">P(Aᵢ ∩ B)</span>)، والمقام = مجموع كل المسارات اللي توصل لـ <span class="en">B</span> (<span class="en">P(B)</span>).</div>
+
+  <h3 class="sec">📜 اشتقاق القانونين <small>(من السلايدات — اختياري)</small></h3>
+  <div class="proof">
+    <div class="ps" data-why="B جزء من S، و S = اتحاد الـ Aᵢ"><div class="formula"><span class="en">B = B ∩ S = (B∩A₁) ∪ (B∩A₂) ∪ … ∪ (B∩Aₙ)</span></div></div>
+    <div class="ps" data-why="متنافية ← نجمع"><div class="formula"><span class="en">P(B) = Σ P(B ∩ Aᵢ)</span> &nbsp;[1]</div></div>
+    <div class="ps" data-why="من تعريف الشرطي"><div class="formula"><span class="en">P(Aᵢ ∩ B) = P(B|Aᵢ) · P(Aᵢ)</span> &nbsp;[2]</div></div>
+    <div class="ps" data-why="[1] و [2]"><div class="formula"><span class="en">P(B) = Σ P(B|Aᵢ)P(Aᵢ)</span> &nbsp;[3] — قانون الاحتمال الكلي</div></div>
+    <div class="ps" data-why="نعوّض [2] و [3] في تعريف الشرطي"><div class="formula"><span class="en">P(Aᵢ|B) = P(Aᵢ∩B)/P(B) = <b>P(B|Aᵢ)P(Aᵢ) / Σ P(B|Aⱼ)P(Aⱼ)</b></span> ∎</div></div>
+  </div>
+
+  <h3 class="sec">🧪 حاسبة <span class="en">Bayes</span> (مثال 2.30)</h3>
+  <div class="card calc ph-des">
+    <p style="margin:0 0 6px">مستشفى 4 أقسام: نسب عمال النظافة فيها (<span class="en">P(Aᵢ)</span>) ونسب المدخنين في كل قسم (<span class="en">P(B|Aᵢ)</span>). اختير عامل ووُجد <b>مدخن</b> (<span class="en">B</span>).</p>
+    <table class="bt" id="bt"></table>
+    <div class="presets" id="bPre"><button type="button" class="btn" data-p="0.4,0.3,0.2,0.1" data-l="0.18,0.15,0.12,0.09">كما في نص المسألة</button><button type="button" class="btn" data-p="0.3,0.4,0.2,0.1" data-l="0.15,0.18,0.12,0.09">ترتيب حل السلايد</button><button type="button" class="btn" data-p="0.6,0.4,0,0" data-l="0.1,0.2,0,0">قسمين: 0.6/0.4</button></div>
+    <div class="res-row" id="bayRes"></div>
+    <div class="verdict" id="bayV"></div>
+  </div>
+  <div class="note warn">📖 <b>تناقض في السلايد (مثال 2.30):</b> نص المسألة بيقول القسم الأول <span class="en">40%</span> وبيدخن منهم <span class="en">18%</span> (والتاني <span class="en">30%</span> و<span class="en">15%</span>)، لكن الحل بيكتب <span class="en">P(A₁) = 0.3 , P(B|A₁) = 0.15</span> و<span class="en">P(A₂) = 0.4 , P(B|A₂) = 0.18</span> (قالب القسمين) وفيه <span class="en">P(A₄) = 0.2</span> بالغلط. النتيجة: السلايد بيطلّع <b>0.3</b> للقسم الأول و<b>0.48</b> للتاني و<b>0.7</b> لـ «مش الأول».<br>
+  <b>حسب نص المسألة:</b> القسم الأول <span class="en">0.48</span> · التاني <span class="en">0.30</span> · «مش الأول» <span class="en">1 − 0.48 = 0.52</span> · <span class="en">P(B) = 0.15</span>. الطريقة هي المهمة — اكتب خطواتك بوضوح وقول إنك بتتبع نص المسألة.</div>
+</section>
+
+<!-- =====================================================  5 · TRAPS -->
+<section class="station" data-icon="⚠️" data-title="فخاخ الامتحان">
+  <h2>فخاخ الامتحان ⚠️</h2>
+  <p class="lead">قرر: صح ولا غلط؟ (<b class="en">20</b> جملة)</p>
+  <div data-deck="traps"></div>
+</section>
+
+<!-- =====================================================  6 · FLASH -->
+<section class="station" data-icon="🧠" data-title="Flashcards">
+  <h2>Flashcards 🧠</h2>
+  <p class="lead">فكّر في الإجابة الأول، وبعدين اقلب الكارت.</p>
+  <div data-flash="main"></div>
+  <p class="hint" style="text-align:center;margin-top:10px">⌨️ مسطرة (Space) تقلب · الأسهم تنقل بين الكروت</p>
+</section>
+
+<!-- =====================================================  7 · QUIZ -->
+<section class="station" data-icon="📝" data-title="الكويز النهائي">
+  <h2>الكويز النهائي 📝</h2>
+  <p class="lead">10 أسئلة <span class="en">MCQ</span> بتصحيح فوري، وبعدها 3 <span class="en">Essay</span>. (أرقام مختلفة عن الكتاب.)</p>
+  <h3 class="sec">① MCQ</h3>
+  <div data-deck="mcq"></div>
+  <h3 class="sec">② Essay</h3>
+  <div class="card essay" data-essay="e1"><h3>سؤال 1</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">Define the conditional probability of A given B and state its properties. A fair die is rolled once and it is known that the number obtained is greater than 2. Find the probability that it is even.</p>
+    <textarea placeholder="اكتب إجابتك هنا…"></textarea><button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button><div class="model" hidden><div class="mdl"></div><div class="pts"></div></div></div>
+  <div class="card essay" data-essay="e2"><h3>سؤال 2</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">When are two events A and B said to be independent? State the condition for a set of n events to be independent. Is it true that two mutually exclusive events with positive probabilities are independent? Explain.</p>
+    <textarea placeholder="اكتب إجابتك هنا…"></textarea><button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button><div class="model" hidden><div class="mdl"></div><div class="pts"></div></div></div>
+  <div class="card essay" data-essay="e3"><h3>سؤال 3 (حساب)</h3>
+    <p dir="auto" class="en plain" style="font-weight:600">Machine M1 produces 60% of the items of a factory and machine M2 produces 40%. 4% of the items of M1 and 5% of the items of M2 are defective. An item is chosen at random and found defective. Find the probability that it was produced by M1.</p>
+    <textarea placeholder="اكتب الحل هنا…"></textarea><button type="button" class="btn" data-show>📖 اعرض الإجابة النموذجية</button><div class="model" hidden><div class="mdl"></div><div class="pts"></div></div></div>
+</section>
+
+<!-- =====================================================  8 · SUMMARY -->
+<section class="station summary" data-icon="⚡" data-title="ملخص المراجعة">
+  <h2>ملخص المراجعة ⚡ <span class="en plain" style="font-size:18px">Lecture 6</span></h2>
+  <p class="lead noprint">ده اللي تراجعه الليلة اللي قبل الامتحان. <button type="button" class="btn" onclick="window.print()">🖨️ اطبع / احفظ PDF</button></p>
+
+  <table class="tbl">
+    <tr><th>الموضوع</th><th>القانون</th></tr>
+    <tr class="ph-plan"><td><span class="dot"></span>شرطي</td><td class="en">P(A|B) = P(A∩B) / P(B) , P(B) &gt; 0</td></tr>
+    <tr class="ph-plan"><td><span class="dot"></span>ضرب</td><td class="en">P(A∩B) = P(A)P(B|A) = P(B)P(A|B)</td></tr>
+    <tr class="ph-ana"><td><span class="dot"></span>مستقلين</td><td class="en">P(A∩B) = P(A)P(B) ⟺ P(A|B) = P(A)</td></tr>
+    <tr class="ph-ana"><td><span class="dot"></span>n مستقلة</td><td>القاعدة لكل الأزواج والتلاتيات ... وللكل (<span class="en">∏</span>)</td></tr>
+    <tr class="ph-des"><td><span class="dot"></span>احتمال كلي</td><td class="en">P(B) = Σ P(B|Aᵢ)P(Aᵢ)</td></tr>
+    <tr class="ph-des"><td><span class="dot"></span>Bayes</td><td class="en">P(Aᵢ|B) = P(B|Aᵢ)P(Aᵢ) / Σ P(B|Aⱼ)P(Aⱼ)</td></tr>
+  </table>
+
+  <div class="grid g2">
+    <div class="card"><h4>🔢 أرقام الكتاب</h4><p style="margin:0" class="en plain">2.25: 2/5 · 2.26: 1/4 · 2.27: 65%, 0.50, 0.071 · 2.28: 2/9, 1/2 · 2.29: 1/2, 3/7 · 7W3B: 0.343 / 0.29 / (0.327) · 2.30: P(B)=0.15, 0.48, 0.30, 0.52</p></div>
+    <div class="card"><h4>🔑 متنافيين ضد مستقلين</h4><p style="margin:0">متنافيين: <span class="en">P(A∩B)=0</span>. مستقلين: <span class="en">P(A∩B)=P(A)P(B)</span>.</p></div>
+  </div>
+
+  <h3 class="sec">📖 الكتاب ضد السلايدات</h3>
+  <table class="tbl">
+    <tr><th>النقطة</th><th>اللي حصل</th><th>اعمل إيه</th></tr>
+    <tr><td>المحتوى</td><td>السلايدات = صفحات الكتاب (ص 91–103)</td><td>نفس الأفكار</td></tr>
+    <tr><td>ترقيم</td><td>فيه مثالين رقمهم <span class="en">2.29</span> (الأطفال + الكرات)</td><td>تمييز بالموضوع</td></tr>
+    <tr><td>الكرات (3): الأولى بس بترجع</td><td>مكتوب <span class="en">0.226</span></td><td>الحساب <span class="en">0.3267</span></td></tr>
+    <tr><td>مثال 2.30</td><td>نص المسألة غير ترتيب الحل (والقسم الرابع <span class="en">0.2</span> بدل <span class="en">0.1</span>)</td><td>اتبع النص: <span class="en">0.48 / 0.30 / 0.52</span> واذكر الطريقة</td></tr>
+    <tr><td><span class="en">Bayes</span> proof</td><td>في السلايدات بس مش في فولدر Proofs</td><td>اختياري</td></tr>
+  </table>
+  <div class="note bad">⚠️ <b>الفخاخ:</b> ❌ نعكس الشرط بالغلط (<span class="en">P(A|B) ≠ P(B|A)</span>) &nbsp;·&nbsp; ❌ متنافيين = مستقلين &nbsp;·&nbsp; ❌ ننسى نقسم على P(B) &nbsp;·&nbsp; ❌ نعتبر السحب بدون إحلال مستقل &nbsp;·&nbsp; ❌ في Bayes ننسى المقام (مجموع كل المسارات)</div>
+</section>
+
+</main>
+</div>
+
+<script>
+window.DATA = {
+  decks: {
+    ex: {
+      cols: 1, shuffleOpts: true,
+      cards: [
+        { q: 'Ex. 2.25 — A die is rolled and we know that 5 did not appear. The probability that the number is odd is:', opts: ['2/5', '1/2', '1/3', '3/5'], a: 0, why: 'A = {1,2,3,4,6} (5 عناصر)، الفردي فيها {1,3} ← <b>2/5</b>.' },
+        { q: 'Ex. 2.26 — Three coins are tossed. Given that the first coin shows a head, the probability of obtaining identical faces is:', opts: ['1/4', '1/2', '1/8', '3/4'], a: 0, why: 'P(A∩B) = 1/8 ({HHH}) ، P(A) = 1/2 ← (1/8)/(1/2) = <b>1/4</b>.' },
+        { q: 'Ex. 2.27 — P(pills) = 0.10, P(coffee) = 0.30, P(both) = 0.05. The percentage who neither take pills nor drink coffee is:', opts: ['65%', '35%', '60%', '85%'], a: 0, why: '1 − (0.10 + 0.30 − 0.05) = <b>0.65</b>.' },
+        { q: 'Ex. 2.27 — The proportion who drink coffee among those who take pills is:', opts: ['0.50', '0.05', '0.30', '0.071'], a: 0, why: 'P(B|A) = 0.05 / 0.10 = <b>0.50</b>.' },
+        { q: 'Ex. 2.28 — Of 90 viewers, 45 are female and 10 of them prefer sports channels. P(Sport | Female) =', opts: ['2/9', '1/9', '10/90', '1/2'], a: 0, why: '10/45 = <b>2/9</b>.' },
+        { q: 'Ex. 2.28 — Of the 10 viewers who prefer news, 5 are male. P(Male | News) =', opts: ['1/2', '5/90', '1/9', '5/45'], a: 0, why: '5/10 = <b>1/2</b>.' },
+        { q: 'Ex. 2.29 — A family has three children. P(exactly two girls | the eldest child is a girl) =', opts: ['1/2', '3/8', '3/7', '1/4'], a: 0, why: '(2/8)/(4/8) = <b>1/2</b>.' },
+        { q: 'Ex. 2.29 — P(exactly two girls | at least one child is a girl) =', opts: ['3/7', '1/2', '3/8', '7/8'], a: 0, why: '(3/8)/(7/8) = <b>3/7</b>.' }
+      ]
+    },
+    traps: {
+      cols: 2,
+      opts: [{ t: 'صح ✔ (True)', cls: 't-ok' }, { t: 'غلط ✘ (False)', cls: 't-bad' }],
+      cards: [
+        { q: 'P(A | B) = P(A ∩ B) / P(B), provided that P(B) > 0.', a: 0, why: 'صح.' },
+        { q: 'A conditional probability can be greater than 1.', a: 1, why: 'غلط. 0 ≤ P(B|A) ≤ 1.' },
+        { q: 'P(S | A) = 1 and P(A | A) = 1.', a: 0, why: 'صح (من خواص الشرطي).' },
+        { q: 'P(A ∩ B) = P(A) · P(B | A) when P(A) ≠ 0.', a: 0, why: 'صح.' },
+        { q: 'If A is independent of B, then P(A | B) = P(A).', a: 0, why: 'صح.' },
+        { q: 'A and B are independent if and only if P(A ∩ B) = P(A) · P(B).', a: 0, why: 'صح — الشرط الضروري والكافي.' },
+        { q: 'Two mutually exclusive events, each with positive probability, are always independent.', a: 1, why: 'غلط. P(A∩B) = 0 ≠ P(A)P(B) (استنتاج من التعريف).' },
+        { q: 'Ex. 2.25: P(odd | 5 did not appear) = 2/5.', a: 0, why: 'صح.' },
+        { q: 'Ex. 2.26: P(identical faces | the first coin is a head) = 1/4.', a: 0, why: 'صح.' },
+        { q: 'Ex. 2.27: 65% of the students neither take stimulant pills nor drink coffee.', a: 0, why: 'صح.' },
+        { q: 'Ex. 2.28: P(Sport | Female) = 10/90.', a: 1, why: 'غلط. المقام = عدد الإناث (45) ← 10/45 = 2/9.' },
+        { q: 'Ex. 2.29: P(exactly two girls | the eldest child is a girl) = 1/2.', a: 0, why: 'صح.' },
+        { q: 'Ex. 2.29: P(exactly two girls | at least one girl) = 1/2.', a: 1, why: 'غلط. هي 3/7.' },
+        { q: 'Drawing 3 white balls from 7 white and 3 black with replacement has probability (7/10)³ = 0.343.', a: 0, why: 'صح.' },
+        { q: 'Drawing 3 white balls from 7 white and 3 black without replacement also has probability 0.343.', a: 1, why: 'غلط. 7/10 × 6/9 × 5/8 = 0.29.' },
+        { q: 'The law of total probability: P(B) = Σ P(B | Aᵢ) P(Aᵢ).', a: 0, why: 'صح.' },
+        { q: 'In Bayes’ theorem, the events A₁, …, Aₙ are mutually exclusive and their union is the sample space.', a: 0, why: 'صح — تقسيم (partition).' },
+        { q: 'Bayes: P(Aᵢ | B) = P(B | Aᵢ) P(Aᵢ) / Σ P(B | Aⱼ) P(Aⱼ).', a: 0, why: 'صح.' },
+        { q: 'In Example 2.30, P(smoker) = 0.15.', a: 0, why: 'صح: 0.4×0.18 + 0.3×0.15 + 0.2×0.12 + 0.1×0.09.' },
+        { q: 'A set of n events is independent if the product rule holds only for pairs of events.', a: 1, why: 'غلط. لازم لكل الأزواج والتلاتيات ... وللكل.' }
+      ]
+    },
+    mcq: {
+      cols: 1, shuffleOpts: true,
+      cards: [
+        { q: 'P(A ∩ B) = 0.12 and P(B) = 0.4. Then P(A | B) equals:', opts: ['0.3', '0.048', '0.5', '3.33'], a: 0, why: '0.12 / 0.4 = <b>0.3</b>.' },
+        { q: 'A and B are independent with P(A) = 0.5 and P(B) = 0.4. Then P(A | B) equals:', opts: ['0.5', '0.4', '0.2', '0.9'], a: 0, why: 'مستقلين ← P(A|B) = P(A) = <b>0.5</b>.' },
+        { q: 'Which of the following pairs is independent? (P(A), P(B), P(A ∩ B))', opts: ['0.5, 0.4, 0.2', '0.5, 0.4, 0.3', '0.3, 0.4, 0', '0.5, 0.5, 0.4'], a: 0, why: '0.5 × 0.4 = 0.2 ✔ فقط الأول.' },
+        { q: 'Two machines: M1 makes 60% of items and 10% of them are defective; M2 makes 40% and 20% of them are defective. P(defective) =', opts: ['0.14', '0.30', '0.06', '0.08'], a: 0, why: '0.6×0.1 + 0.4×0.2 = 0.06 + 0.08 = <b>0.14</b>.' },
+        { q: 'In the same situation, a defective item is found. The probability that it came from M1 is:', opts: ['0.43', '0.57', '0.06', '0.60'], a: 0, why: '0.06 / 0.14 = <b>0.4286</b> ≈ 0.43.' },
+        { q: 'A box has 5 red and 3 blue balls. Two balls are drawn without replacement. P(both red) =', opts: ['5/14', '25/64', '5/8', '1/4'], a: 0, why: '5/8 × 4/7 = 20/56 = <b>5/14</b>.' },
+        { q: 'Two balls are drawn with replacement from the same box (5 red, 3 blue). P(both red) =', opts: ['25/64', '5/14', '10/16', '5/8'], a: 0, why: '5/8 × 5/8 = <b>25/64</b>.' },
+        { q: 'Of 40 smokers, 10 have a certain disease. P(disease | smoker) =', opts: ['0.25', '0.10', '4', '0.4'], a: 0, why: '10/40 = <b>0.25</b>.' },
+        { q: 'For any event A with P(A) > 0, P(S | A) equals:', opts: ['1', '0', 'P(A)', '1/2'], a: 0, why: 'من الخواص: P(S|A) = 1.' },
+        { q: 'If A and B are mutually exclusive and P(B) > 0, then P(A | B) equals:', opts: ['0', '1', 'P(A)', 'P(B)'], a: 0, why: 'P(A∩B) = 0 ← 0 / P(B) = <b>0</b>.' }
+      ]
+    }
+  },
+
+  flash: {
+    main: [
+      { f: 'الاحتمال الشرطي', b: '<span class="en">P(A|B) = P(A∩B) / P(B)</span> بشرط <span class="en">P(B) &gt; 0</span>.' },
+      { f: 'خواص الشرطي (3)', b: '① <span class="en">0 ≤ P(B|A) ≤ 1</span> ② <span class="en">P(S|A) = 1 , P(A|A) = 1</span> ③ <span class="en">P(A∩B) = P(A)P(B|A) = P(B)P(A|B)</span>' },
+      { f: 'إزاي أفكر في الشرطي؟', b: 'فراغ العينة بيصغر لـ <span class="en">B</span>: العدّ بيبقى (عدد <span class="en">A∩B</span>) ÷ (عدد <span class="en">B</span>).' },
+      { f: 'حدثين مستقلين', b: '<span class="en">P(A∩B) = P(A)P(B)</span> ⟺ <span class="en">P(A|B) = P(A)</span> (الشرط الضروري والكافي).' },
+      { f: 'استقلال n أحداث', b: 'القاعدة لكل الأزواج <span class="en">Aᵢ∩Aⱼ</span>، ولكل التلاتيات، ... ولكلهم <span class="en">P(∩Aᵢ) = ∏P(Aᵢ)</span>.' },
+      { f: 'متنافيين ضد مستقلين', b: 'متنافيين: <span class="en">P(A∩B) = 0</span>. مستقلين: <span class="en">P(A∩B) = P(A)P(B)</span>.' },
+      { f: 'مثال 2.25', b: 'نرد، 5 ما ظهرش، فردي؟ <span class="en">2/5</span>.' },
+      { f: 'مثال 2.26', b: '3 عملات، الأولى صورة، وجوه متشابهة؟ <span class="en">1/4</span>.' },
+      { f: 'مثال 2.27', b: '<span class="en">65%</span> مفيش حبوب ولا قهوة · <span class="en">0.50</span> قهوة بشرط حبوب · <span class="en">0.071</span> حبوب بشرط مفيش قهوة.' },
+      { f: 'مثال 2.28', b: '<span class="en">P(Sport|Female) = 10/45 = 2/9</span> · <span class="en">P(Male|News) = 5/10 = 1/2</span>.' },
+      { f: 'مثال 2.29 (3 أطفال)', b: 'بنتين بشرط الكبرى بنت <span class="en">1/2</span> · بشرط بنت على الأقل <span class="en">3/7</span>.' },
+      { f: 'مثال 2.29 (7 بيضا و 3 سودا)', b: 'مع الإحلال <span class="en">0.343</span> · بدون إحلال <span class="en">0.29</span> · الأولى بس بترجع <span class="en">0.327</span> (السلايد كاتب 0.226).' },
+      { f: 'تقسيم فراغ العينة (partition)', b: 'أحداث <span class="en">A₁…Aₙ</span> متنافية واتحادها = <span class="en">S</span>.' },
+      { f: 'قانون الاحتمال الكلي', b: '<span class="en">P(B) = Σ P(B|Aᵢ) P(Aᵢ)</span>' },
+      { f: 'قانون Bayes', b: '<span class="en">P(Aᵢ|B) = P(B|Aᵢ)P(Aᵢ) / Σ P(B|Aⱼ)P(Aⱼ)</span>' },
+      { f: 'مثال 2.30: P(مدخن)', b: '<span class="en">0.4×0.18 + 0.3×0.15 + 0.2×0.12 + 0.1×0.09 = 0.15</span>' },
+      { f: 'مثال 2.30: النتايج (نص المسألة)', b: 'قسم 1: <span class="en">0.072/0.15 = 0.48</span> · قسم 2: <span class="en">0.30</span> · «مش الأول»: <span class="en">0.52</span>.' },
+      { f: 'مثال 2.30: تناقض السلايد', b: 'الحل بيستخدم 0.3/0.15 للقسم الأول (قالب) فبيطلّع 0.3 و 0.48 و 0.7. اتبع نص المسألة واذكر الطريقة.' },
+      { f: 'ليه لازم نقسم على <span class="en">P(B)</span>؟', b: 'لأن <span class="en">B</span> بقى هو فراغ العينة الجديد.' },
+      { f: 'السحب مع/بدون إحلال', b: 'مع ← مستقلين (ضرب عادي). بدون ← غير مستقلين (شرطي).' }
+    ]
+  },
+
+  essays: {
+    e1: {
+      model:
+        '<div dir="ltr" style="line-height:1.85"><b>Definition.</b> For events A and B in S with P(B) &gt; 0, P(A | B) = P(A ∩ B) / P(B): the probability that A occurs given that B has occurred.<br>' +
+        '<b>Properties.</b> (i) 0 ≤ P(B|A) ≤ 1; (ii) P(S|A) = 1 and P(A|A) = 1; (iii) P(A ∩ B) = P(A)P(B|A) if P(A) ≠ 0, and = P(B)P(A|B) if P(B) ≠ 0.<br>' +
+        '<b>Die:</b> B = “greater than 2” = {3,4,5,6}, P(B) = 4/6. A = “even”; A ∩ B = {4,6}, P(A ∩ B) = 2/6. So P(A | B) = (2/6)/(4/6) = <b>1/2</b>.</div>',
+      points: ['Wrote P(A|B) = P(A∩B)/P(B) with P(B) > 0', 'Stated the properties (range, P(S|A)=P(A|A)=1, product form)', 'B = {3,4,5,6}, A∩B = {4,6}', 'Computed (2/6)/(4/6) = 1/2']
+    },
+    e2: {
+      model:
+        '<div dir="ltr" style="line-height:1.85">A and B are independent if the occurrence of one does not depend on the occurrence of the other: P(A|B) = P(A) and P(B|A) = P(B). The necessary and sufficient condition is P(A ∩ B) = P(A)·P(B).<br>' +
+        'A set of events A₁,…,Aₙ is independent if P(Aᵢ ∩ Aⱼ) = P(Aᵢ)P(Aⱼ) for all pairs, P(Aᵢ ∩ Aⱼ ∩ Aₖ) = P(Aᵢ)P(Aⱼ)P(Aₖ) for all triples, …, and P(∩Aᵢ) = ∏P(Aᵢ).<br>' +
+        'Mutually exclusive events with positive probabilities are <b>not</b> independent: A ∩ B = ∅ gives P(A ∩ B) = 0, whereas P(A)P(B) &gt; 0.</div>',
+      points: ['Defined independence (P(A|B) = P(A))', 'Stated P(A∩B) = P(A)P(B) as necessary and sufficient', 'Condition for n events (all pairs, triples, …, all)', 'Mutually exclusive with positive probabilities ⇒ not independent', 'Reason: P(A∩B) = 0 ≠ P(A)P(B)']
+    },
+    e3: {
+      model:
+        '<div dir="ltr" style="line-height:1.85">Let D = “defective”. P(M1) = 0.6, P(D|M1) = 0.04; P(M2) = 0.4, P(D|M2) = 0.05.<br>' +
+        'Total probability: P(D) = 0.6×0.04 + 0.4×0.05 = 0.024 + 0.020 = 0.044.<br>' +
+        'Bayes: P(M1 | D) = P(D|M1)P(M1) / P(D) = 0.024 / 0.044 = <b>0.5455</b> (≈ 6/11).</div>',
+      points: ['Identified the priors 0.6 / 0.4 and the likelihoods 0.04 / 0.05', 'P(D) = 0.044 by total probability', 'Used Bayes with the correct numerator 0.024', 'P(M1|D) = 0.5455']
+    }
+  }
+};
+</script>
+<script>
+/* ==========================================================
+   BS201 study pages — shared interactive engine
+   Reads window.DATA = { decks:{}, flash:{}, essays:{} }
+   ========================================================== */
+(function () {
+  'use strict';
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const shuffle = (a) => {
+    a = a.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const DATA = window.DATA || {};
+  const KEY = 'bs201:' + (document.body.dataset.lecture || 'x');
+  let S = {};
+  try { S = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { S = {}; }
+  S.done = S.done || {}; S.best = S.best || {}; S.fc = S.fc || {}; S.essay = S.essay || {};
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  /* ---------- theme ---------- */
+  const TK = 'bs201:theme';
+  let theme = 'dark';
+  try { theme = localStorage.getItem(TK) || 'dark'; } catch (e) {}
+  const themeBtn = $('#themeBtn');
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    if (themeBtn) themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+    try { localStorage.setItem(TK, t); } catch (e) {}
+  }
+  applyTheme(theme);
+  if (themeBtn) themeBtn.addEventListener('click', () => applyTheme(theme === 'dark' ? 'light' : 'dark'));
+
+  /* ---------- stations ---------- */
+  const stations = $$('.station');
+  const nav = $('#nav');
+  const navBtns = [];
+  let cur = -1;
+
+  stations.forEach((st, i) => {
+    if (nav) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.innerHTML = `<span class="num">${i + 1}</span><span class="lbl">${st.dataset.icon || ''} ${st.dataset.title || ''}</span><span class="tick">✓</span>`;
+      b.addEventListener('click', () => go(i));
+      nav.appendChild(b);
+      navBtns.push(b);
+    }
+    const last = i === stations.length - 1;
+    const f = document.createElement('div');
+    f.className = 'station-foot noprint';
+    f.innerHTML =
+      `<button type="button" class="btn ghost" data-prev${i === 0 ? ' style="visibility:hidden"' : ''}>→ السابق</button>` +
+      (last
+        ? `<a class="btn primary" href="index.html" data-finish>خلّصت المحاضرة 🏁</a>`
+        : `<button type="button" class="btn primary" data-next>التالي ←</button>`);
+    st.appendChild(f);
+    const p = $('[data-prev]', f), n = $('[data-next]', f), fin = $('[data-finish]', f);
+    if (p) p.addEventListener('click', () => go(i - 1));
+    if (n) n.addEventListener('click', () => go(i + 1));
+    if (fin) fin.addEventListener('click', () => { S.done[i] = true; save(); });
+  });
+
+  function refresh() {
+    navBtns.forEach((b, k) => {
+      b.classList.toggle('on', k === cur);
+      b.classList.toggle('done', !!S.done[k]);
+    });
+    const n = stations.filter((_, k) => S.done[k]).length;
+    const pb = $('#progBar'), pt = $('#progTxt');
+    if (pb) pb.style.width = (n / stations.length * 100) + '%';
+    if (pt) pt.textContent = n + '/' + stations.length;
+  }
+
+  function go(i, init) {
+    i = Math.max(0, Math.min(stations.length - 1, i));
+    if (!init && cur >= 0 && i > cur) S.done[cur] = true;
+    cur = i;
+    stations.forEach((s, k) => s.classList.toggle('on', k === i));
+    S.last = i; save(); refresh();
+    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+    if (!init) window.scrollTo({ top: 0, behavior: 'smooth' });
+    const nb = navBtns[i];
+    if (nb && nav && nav.scrollWidth > nav.clientWidth) nb.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
+  $$('[data-go]').forEach((e) => e.addEventListener('click', () => go(parseInt(e.dataset.go, 10) - 1)));
+
+  /* ---------- flip cards ---------- */
+  $$('.flip').forEach((el) => {
+    const f = $('.f', el), b = $('.b', el);
+    if (!f || !b) return;
+    const inn = document.createElement('div');
+    inn.className = 'flip-in';
+    f.className = 'face front'; b.className = 'face back';
+    inn.append(f, b); el.append(inn);
+    el.tabIndex = 0;
+    el.addEventListener('click', () => el.classList.toggle('open'));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.classList.toggle('open'); }
+    });
+  });
+
+  /* ---------- tabs ---------- */
+  $$('[data-tabs]').forEach((root) => {
+    const btns = $$('[data-tab]', root), panes = $$('[data-pane]', root);
+    const set = (id) => {
+      btns.forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
+      panes.forEach((p) => p.classList.toggle('on', p.dataset.pane === id));
+    };
+    btns.forEach((b) => b.addEventListener('click', () => set(b.dataset.tab)));
+    set(root.dataset.tabs || (btns[0] && btns[0].dataset.tab));
+  });
+
+  /* ---------- deck (quiz / sorting / true-false) ---------- */
+  function Deck(root, cfg) {
+    let cards = shuffle(cfg.cards), i = 0, score = 0, locked = false, order = [];
+    root.classList.add('deck');
+    root.innerHTML =
+      `<div class="deck-head"><span class="cnt"></span><div class="deck-bar"><i></i></div><span class="sc"></span></div><div class="deck-body"></div>`;
+    const body = $('.deck-body', root), cnt = $('.cnt', root), bar = $('.deck-bar i', root), sc = $('.sc', root);
+
+    function render() {
+      if (i >= cards.length) return end();
+      const c = cards[i];
+      locked = false;
+      cnt.textContent = (i + 1) + ' / ' + cards.length;
+      bar.style.width = (i / cards.length * 100) + '%';
+      sc.textContent = '⭐ ' + score;
+      const opts = c.opts || cfg.opts;
+      const cols = cfg.cols ? ' c' + cfg.cols : '';
+      body.innerHTML = `<div class="deck-q" dir="auto">${c.q}</div><div class="opts${cols}"></div><div class="fbwrap"></div>`;
+      const wrap = $('.opts', body);
+      // cfg.shuffleOpts: mix the answer order of per-card MCQ options so position never gives the answer away
+      order = opts.map((_, k) => k);
+      if (cfg.shuffleOpts && c.opts) order = shuffle(order);
+      order.forEach((oi, k) => {
+        const o = opts[oi];
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'opt' + (typeof o === 'object' && o.cls ? ' ' + o.cls : '');
+        b.setAttribute('dir', 'auto');
+        b.innerHTML = typeof o === 'string' ? o : o.t;
+        b.addEventListener('click', () => pick(k));
+        wrap.appendChild(b);
+      });
+    }
+
+    function pick(k) {
+      if (locked) return;
+      locked = true;
+      const c = cards[i], ok = order[k] === c.a;
+      if (ok) score++;
+      $$('.opt', body).forEach((b, j) => {
+        b.disabled = true;
+        if (order[j] === c.a) b.classList.add('right');
+        else if (j === k) b.classList.add('wrong');
+      });
+      sc.textContent = '⭐ ' + score;
+      const fb = $('.fbwrap', body);
+      fb.innerHTML =
+        `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✔ تمام!' : '✘ لأ — راجع الشرح'}</b><div dir="auto">${c.why || ''}</div>` +
+        `<button type="button" class="btn primary nxt">${i === cards.length - 1 ? 'شوف النتيجة' : 'التالي ←'}</button></div>`;
+      const nx = $('.nxt', fb);
+      nx.addEventListener('click', () => { i++; render(); });
+      nx.focus({ preventScroll: true });
+    }
+
+    function end() {
+      bar.style.width = '100%';
+      const pct = Math.round(score / cards.length * 100);
+      const best = Math.max(S.best[cfg.id] || 0, pct);
+      S.best[cfg.id] = best; save();
+      const msg = pct === 100 ? 'ممتاز! 🔥 الجزء ده تمام' : pct >= 70 ? 'كويس جداً 👏 راجع الغلطات بس' : 'لسه محتاج مراجعة — ارجع للشرح وجرّب تاني 💪';
+      sc.textContent = '⭐ ' + score;
+      cnt.textContent = 'خلصت';
+      body.innerHTML =
+        `<div class="deck-end"><div class="big">${pct}%</div><p>${score} من ${cards.length} — ${msg}</p>` +
+        `<p class="muted">أحسن نتيجة ليك: ${best}%</p><button type="button" class="btn primary again">🔁 العب تاني</button></div>`;
+      $('.again', body).addEventListener('click', () => { cards = shuffle(cfg.cards); i = 0; score = 0; render(); });
+      if (cfg.onDone) cfg.onDone(pct);
+    }
+    render();
+  }
+
+  /* ---------- flashcards ---------- */
+  function Flash(root, cards, id) {
+    let mode = 'all', pos = 0, list = [], timer;
+    root.classList.add('fc');
+    root.innerHTML =
+      `<div class="fc-top"><div class="seg"><button type="button" data-m="all" class="on">كل الكروت</button><button type="button" data-m="review">اللي لسه مش حافظها</button></div><span class="fc-count muted"></span></div>` +
+      `<div class="fc-card" tabindex="0"><div class="fc-in"><div class="face front"></div><div class="face back"></div></div></div>` +
+      `<div class="fc-actions"><button type="button" class="btn" data-a="prev">→ اللي قبلها</button><button type="button" class="btn bad" data-a="r">🔁 لسه مش حافظها</button><button type="button" class="btn good" data-a="k">✅ عرفتها</button><button type="button" class="btn" data-a="next">اللي بعدها ←</button></div>` +
+      `<div class="deck-bar"><i></i></div><p class="fc-stat muted"></p>`;
+    const card = $('.fc-card', root), front = $('.front', root), back = $('.back', root);
+    const cnt = $('.fc-count', root), bar = $('.deck-bar i', root), stat = $('.fc-stat', root);
+    const key = (n) => id + ':' + n;
+
+    function stats() {
+      const k = cards.filter((_, n) => S.fc[key(n)] === 'k').length;
+      stat.textContent = 'عرفت ' + k + ' من ' + cards.length;
+      bar.style.width = (k / cards.length * 100) + '%';
+    }
+    function show() {
+      list = cards.map((_, n) => n).filter((n) => mode === 'all' || S.fc[key(n)] !== 'k');
+      stats();
+      clearTimeout(timer);
+      if (!list.length) {
+        card.classList.remove('open');
+        front.innerHTML = '<div dir="auto">🎉 خلصت كل الكروت!</div><small>ارجع لـ "كل الكروت" لو عايز تراجع تاني</small>';
+        back.innerHTML = '';
+        cnt.textContent = '0 / 0';
+        return;
+      }
+      pos = ((pos % list.length) + list.length) % list.length;
+      const c = cards[list[pos]];
+      const fill = () => {
+        front.innerHTML = `<small>السؤال</small><div dir="auto">${c.f}</div><small>👆 اضغط عشان تقلب الكارت</small>`;
+        back.innerHTML = `<small>الإجابة</small><div dir="auto">${c.b}</div>`;
+      };
+      if (card.classList.contains('open')) { card.classList.remove('open'); timer = setTimeout(fill, 230); } else fill();
+      cnt.textContent = (pos + 1) + ' / ' + list.length;
+    }
+
+    root.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-a]');
+      if (a) {
+        const act = a.dataset.a;
+        if (act === 'next') pos++;
+        else if (act === 'prev') pos--;
+        else {
+          S.fc[key(list[pos])] = act; save();
+          if (!(mode === 'review' && act === 'k')) pos++;
+        }
+        show();
+        return;
+      }
+      const m = e.target.closest('[data-m]');
+      if (m) {
+        mode = m.dataset.m; pos = 0;
+        $$('[data-m]', root).forEach((x) => x.classList.toggle('on', x === m));
+        show();
+        return;
+      }
+      if (e.target.closest('.fc-card')) card.classList.toggle('open');
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.classList.toggle('open'); }
+    });
+    show();
+  }
+
+  /* ---------- essay ---------- */
+  $$('.essay').forEach((el) => {
+    const id = el.dataset.essay, d = (DATA.essays || {})[id];
+    if (!d) return;
+    const ta = $('textarea', el), btn = $('[data-show]', el), box = $('.model', el);
+    ta.value = S.essay[id] || '';
+    ta.addEventListener('input', () => { S.essay[id] = ta.value; save(); });
+    $('.mdl', box).innerHTML = d.model;
+    const pts = $('.pts', box);
+    pts.innerHTML =
+      '<h4>✅ علّم على النقط اللي غطّيتها في إجابتك:</h4>' +
+      d.points.map((p) => `<label class="chk"><input type="checkbox"> <span dir="auto">${p}</span></label>`).join('') +
+      '<div class="pts-sc"></div>';
+    const sc = $('.pts-sc', pts);
+    const upd = () => {
+      const n = $$('input:checked', pts).length;
+      sc.textContent = 'غطّيت ' + n + ' من ' + d.points.length + (n === d.points.length ? ' 🔥' : '');
+    };
+    pts.addEventListener('change', upd); upd();
+    btn.addEventListener('click', () => {
+      box.hidden = !box.hidden;
+      btn.textContent = box.hidden ? '📖 اعرض الإجابة النموذجية' : '🙈 اخفي الإجابة';
+    });
+  });
+
+  /* ---------- keyboard for flashcards ---------- */
+  document.addEventListener('keydown', (e) => {
+    if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const st = stations[cur];
+    const fc = st && $('.fc', st);
+    if (!fc) return;
+    if (e.key === 'ArrowLeft') $('[data-a="next"]', fc).click();
+    else if (e.key === 'ArrowRight') $('[data-a="prev"]', fc).click();
+    else if (e.key === ' ' && e.target.tagName !== 'BUTTON') { e.preventDefault(); $('.fc-card', fc).classList.toggle('open'); }
+  });
+
+
+  /* ---------- helpers: number format + number-line strip (BS201) ---------- */
+  const fmt = (x, d) => {
+    d = d == null ? 2 : d;
+    if (!isFinite(x)) return '—';
+    return String(+x.toFixed(d));
+  };
+  function strip(el, o) {
+    const W = 600, H = 112, pad = 26, lo = o.lo, hi = o.hi, step = o.step || 10;
+    const X = (v) => pad + (v - lo) / (hi - lo) * (W - 2 * pad);
+    const vals = o.vals.slice().sort((a, b) => a - b);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const mn = vals[0], mx = vals[vals.length - 1];
+    let s = `<svg viewBox="0 0 ${W} ${H}" class="strip" role="img" aria-label="number line">`;
+    s += `<line x1="${pad}" y1="70" x2="${W - pad}" y2="70" class="ax"/>`;
+    for (let t = Math.ceil(lo / step) * step; t <= hi; t += step) {
+      s += `<line x1="${X(t)}" y1="66" x2="${X(t)}" y2="74" class="ax"/><text x="${X(t)}" y="91" class="tk">${t}</text>`;
+    }
+    if (o.range !== false) {
+      s += `<line x1="${X(mn)}" y1="22" x2="${X(mx)}" y2="22" class="rg"/><line x1="${X(mn)}" y1="16" x2="${X(mn)}" y2="28" class="rg"/><line x1="${X(mx)}" y1="16" x2="${X(mx)}" y2="28" class="rg"/>` +
+        `<text x="${(X(mn) + X(mx)) / 2}" y="11" class="rgt">R = ${fmt(mx - mn)}</text>`;
+    }
+    if (o.mean !== false) {
+      s += `<line x1="${X(mean)}" y1="30" x2="${X(mean)}" y2="76" class="mn"/><text x="${X(mean)}" y="107" class="mnt">x̄ = ${fmt(mean)}</text>`;
+    }
+    const seen = {};
+    vals.forEach((v) => {
+      const k = seen[v] = (seen[v] || 0) + 1;
+      s += `<circle cx="${X(v)}" cy="${56 - (k - 1) * 14}" r="7"/>`;
+    });
+    s += '</svg>';
+    el.innerHTML = s;
+    return { mean, mn, mx };
+  }
+
+  /* ---------- proof stepper ---------- */
+  $$('.proof').forEach((root) => {
+    const steps = $$('.ps', root);
+    let k = 0;
+    steps.forEach((s, i) => {
+      const body = document.createElement('div');
+      body.className = 'pb';
+      while (s.firstChild) body.appendChild(s.firstChild);
+      if (s.dataset.why) {
+        const w = document.createElement('div');
+        w.className = 'pwhy';
+        w.innerHTML = '💡 ' + s.dataset.why;
+        body.appendChild(w);
+      }
+      const n = document.createElement('span');
+      n.className = 'pn';
+      n.textContent = i + 1;
+      s.append(n, body);
+    });
+    const bar = document.createElement('div');
+    bar.className = 'proof-bar noprint';
+    bar.innerHTML = '<button type="button" class="btn primary" data-n>الخطوة اللي بعدها ▶</button><button type="button" class="btn" data-all>اعرض الكل</button><button type="button" class="btn ghost" data-r>🔁 من الأول</button><span class="muted pcnt"></span>';
+    root.appendChild(bar);
+    const nb = $('[data-n]', bar), cnt = $('.pcnt', bar);
+    const upd = () => {
+      steps.forEach((s, i) => s.classList.toggle('on', i < k));
+      cnt.textContent = k + ' / ' + steps.length;
+      nb.disabled = k >= steps.length;
+    };
+    nb.addEventListener('click', () => { k = Math.min(steps.length, k + 1); upd(); });
+    $('[data-all]', bar).addEventListener('click', () => { k = steps.length; upd(); });
+    $('[data-r]', bar).addEventListener('click', () => { k = 0; upd(); });
+    upd();
+  });
+
+
+  /* ---------- order-the-steps game (proofs) ---------- */
+  $$('[data-order]').forEach((root) => {
+    const items = $$('.oi', root).map((e) => e.innerHTML);
+    root.innerHTML = '';
+    root.classList.add('order');
+    root.innerHTML =
+      '<div class="o-head"><b>🧩 رتّب خطوات الإثبات:</b> <span class="muted">اضغط الخطوات بالترتيب الصح</span></div>' +
+      '<ol class="o-ans"></ol><div class="o-pool"></div><div class="o-msg" aria-live="polite"></div>' +
+      '<button type="button" class="btn ghost o-reset">🔁 من الأول</button>';
+    const ans = $('.o-ans', root), pool = $('.o-pool', root), msg = $('.o-msg', root);
+    let next = 0;
+    const draw = () => {
+      next = 0; ans.innerHTML = ''; pool.innerHTML = ''; msg.textContent = ''; msg.className = 'o-msg';
+      shuffle(items.map((h, i) => ({ h, i }))).forEach((o) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'opt o-btn'; b.dir = 'ltr'; b.innerHTML = o.h;
+        b.addEventListener('click', () => {
+          if (b.disabled) return;
+          if (o.i === next) {
+            const li = document.createElement('li'); li.className = 'o-ok'; li.dir = 'ltr'; li.innerHTML = o.h;
+            ans.appendChild(li); b.disabled = true; b.style.display = 'none'; next++;
+            if (next === items.length) { msg.className = 'o-msg good'; msg.textContent = '✔ الترتيب صح! ده الإثبات كامل.'; }
+            else { msg.className = 'o-msg'; msg.textContent = 'تمام ✔ كمّل: إيه الخطوة اللي بعدها؟'; }
+          } else {
+            b.classList.add('wrong');
+            msg.className = 'o-msg bad'; msg.textContent = '✘ مش دي الخطوة اللي بعدها. فكّر: إيه اللي لازم يحصل قبلها؟';
+            setTimeout(() => b.classList.remove('wrong'), 700);
+          }
+        });
+        pool.appendChild(b);
+      });
+    };
+    $('.o-reset', root).addEventListener('click', draw);
+    draw();
+  });
+
+  /* ---------- init decks / flashcards ---------- */
+  const markDone = (el) => {
+    const i = stations.indexOf(el.closest('.station'));
+    if (i >= 0) { S.done[i] = true; save(); refresh(); }
+  };
+  $$('[data-deck]').forEach((el) => {
+    const c = (DATA.decks || {})[el.dataset.deck];
+    if (c) Deck(el, Object.assign({}, c, { id: el.dataset.deck, onDone: () => markDone(el) }));
+  });
+  $$('[data-flash]').forEach((el) => {
+    const c = (DATA.flash || {})[el.dataset.flash];
+    if (c) Flash(el, c, el.dataset.flash);
+  });
+
+  /* ---------- share disclaimer: ONE place, shows at the bottom of every page (index.src.html has its own copy) ---------- */
+  /* >>> EDIT PER SUBJECT: name the real sources (textbook, instructor, slides) <<< */
+  const SOURCES_AR = 'المصادر: كتاب المادة «Introduction to Statistics and Probabilities» (د. كرم خليفة — كلية الحاسبات والمعلومات والذكاء الاصطناعي، جامعة مدينة السادات) وسلايدات المحاضرات.';
+  const SOURCES_EN = 'Sources: the course textbook “Introduction to Statistics and Probabilities” (Dr. Karam Khalifa, Faculty of Computers, Information and AI, University of Sadat City) and the lecture slides.';
+  (function () {
+    const f = document.createElement('footer');
+    f.className = 'disclaimer';
+    f.innerHTML =
+      '<div dir="rtl"><b>⚠️ تنبيه مهم قبل ما تعتمد على الصفحات دي:</b> دي ملخصات ومراجعة شخصية من إعداد طالب لمساعدة زمايله، وهي <b>مش مادة رسمية</b> ومش معتمدة من الدكتور ولا من الكلية. ممكن يكون فيها أخطاء أو نقص، والأسئلة اللي فيها مش بالضرورة شبه الامتحان الحقيقي. ' +
+      '<b>ومبتغنيش أبداً عن الكتاب والمحاضرات (المصدر الأساسي)</b> — ذاكر منهم الأول، وارجع لهم عشان تتأكد من أي معلومة. أي اعتماد مباشر على الصفحات دي بيكون على مسئولية المستخدم نفسه، ومُعِدّ الملخص غير مسئول عن أي نتيجة أو خسارة درجات. ' +
+      '<span class="muted">' + SOURCES_AR + '</span>' +
+      '<div class="d-en"><b>Disclaimer:</b> Unofficial, student-made study notes shared to help classmates — not official course material and not endorsed by the instructor or the university. They may contain mistakes or omissions, and the practice questions may differ from the real exam. ' +
+      'These pages are <b>NOT a substitute for the textbook and the lectures</b> (the primary source): study those first and use them to verify anything written here. Anyone relying on these pages directly does so at their own risk; the author accepts no responsibility for any result or loss of marks. ' + SOURCES_EN + '</div></div>';
+    document.body.appendChild(f);
+  })();
+
+
+  /* ---------- self test (used while building; harmless in production) ---------- */
+  async function selftest() {
+    const res = { overflow: [], decks: {}, missing: [], badIdx: [] };
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const norm = (h) => { const d = document.createElement('div'); d.innerHTML = h; return d.innerHTML; };
+    for (let i = 0; i < stations.length; i++) {
+      go(i, true); await wait(40);
+      if (document.documentElement.scrollWidth > innerWidth + 1) res.overflow.push(i + 1);
+    }
+    $$('[data-flash]').forEach((el) => { if (!(DATA.flash || {})[el.dataset.flash]) res.missing.push('flash:' + el.dataset.flash); });
+    $$('[data-essay]').forEach((el) => { if (!(DATA.essays || {})[el.dataset.essay]) res.missing.push('essay:' + el.dataset.essay); });
+    for (const el of $$('[data-deck]')) {
+      const id = el.dataset.deck, cfg = (DATA.decks || {})[id];
+      if (!cfg) { res.missing.push('deck:' + id); continue; }
+      cfg.cards.forEach((c, k) => {
+        const o = c.opts || cfg.opts;
+        if (!(Number.isInteger(c.a) && c.a >= 0 && c.a < o.length)) res.badIdx.push(id + '#' + k);
+      });
+      let n = 0, guard = 0;
+      while (guard++ < 80) {
+        const qEl = $('.deck-q', el); if (!qEl) break;
+        const card = cfg.cards.find((c) => norm(c.q) === qEl.innerHTML);
+        if (!card) { res.decks[id] = 'NO MATCH: ' + qEl.innerHTML.slice(0, 50); break; }
+        const btns = $$('.opt', el); let idx;
+        if (card.opts) { const t = card.opts[card.a]; idx = btns.findIndex((b) => b.innerHTML === norm(typeof t === 'string' ? t : t.t)); } else idx = card.a;
+        if (idx < 0) { res.decks[id] = 'OPT NOT FOUND: ' + qEl.innerHTML.slice(0, 50); break; }
+        btns[idx].click(); n++; $('.nxt', el).click();
+      }
+      if (!res.decks[id]) { const e = $('.deck-end .big', el); res.decks[id] = (e ? e.textContent : '?') + ' (' + n + '/' + cfg.cards.length + ')'; }
+    }
+    S.done = {}; S.best = {}; save(); go(0, true); refresh();
+    return JSON.stringify(res);
+  }
+
+  /* ---------- start ---------- */
+  let start = parseInt((location.hash || '').slice(1), 10) - 1;
+  if (!(start >= 0 && start < stations.length)) start = Math.min(S.last || 0, stations.length - 1);
+  go(start, true);
+
+  window.Study = { go, strip, fmt, shuffle, selftest };
+})();
+
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = Study.fmt;
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); return b ? gcd(b, a % b) : a; }
+  function frac(n, d) { if (!d) return '—'; var g = gcd(n, d) || 1; return (n / g) + '/' + (d / g); }
+
+  /* two-way table (Ex 2.28) */
+  var T = { Male: { Movies: 25, Sport: 15, News: 5 }, Female: { Movies: 30, Sport: 10, News: 5 } };
+  var ITEMS = ['Male', 'Female', 'Movies', 'Sport', 'News'], G = ['Male', 'Female'], C = ['Movies', 'Sport', 'News'];
+  var selA = 'Sport', selB = 'Female';
+  function has(item, g, c) { return item === g || item === c; }
+  function count(items) { var n = 0; G.forEach(function (g) { C.forEach(function (c) { if (items.every(function (it) { return has(it, g, c); })) n += T[g][c]; }); }); return n; }
+  function chips(boxId, which) {
+    var box = $(boxId);
+    ITEMS.forEach(function (it) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn en'; b.textContent = it; b.dataset.k = it;
+      b.addEventListener('click', function () { if (which === 'A') selA = it; else selB = it; tw(); });
+      box.appendChild(b);
+    });
+  }
+  chips('pkB', 'B'); chips('pkA', 'A');
+  function tw() {
+    Array.prototype.forEach.call($('pkB').children, function (b) { b.classList.toggle('on', b.dataset.k === selB); });
+    Array.prototype.forEach.call($('pkA').children, function (b) { b.classList.toggle('on2', b.dataset.k === selA); });
+    var h = '<tr><th></th>' + C.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '<th>Total</th></tr>';
+    G.forEach(function (g) {
+      h += '<tr><th>' + g + '</th>';
+      var tot = 0;
+      C.forEach(function (c) { tot += T[g][c]; h += '<td class="' + (has(selB, g, c) ? 'inb ' : '') + (has(selB, g, c) && has(selA, g, c) ? 'ina' : '') + '">' + T[g][c] + '</td>'; });
+      h += '<td class="tot">' + tot + '</td></tr>';
+    });
+    h += '<tr><th>Total</th>' + C.map(function (c) { return '<td class="tot">' + (T.Male[c] + T.Female[c]) + '</td>'; }).join('') + '<td class="tot">90</td></tr>';
+    $('tw').innerHTML = h;
+    var nb = count([selB]), nab = count([selA, selB]);
+    $('twRes').innerHTML =
+      '<div class="res"><small class="en plain">P(A and B)</small><b>' + nab + ' / 90</b></div>' +
+      '<div class="res"><small class="en plain">P(B)</small><b>' + nb + ' / 90</b></div>' +
+      '<div class="res pos"><small class="en plain">P(A | B)</small><b>' + nab + ' / ' + nb + ' = ' + frac(nab, nb) + ' ≈ ' + fmt(nab / nb, 3) + '</b></div>';
+    $('twV').className = 'verdict';
+    $('twV').innerHTML = 'الخانات الزرقا = <b>B</b> (فراغ العينة الجديد، ' + nb + ' فرد)، وبإطار أصفر اللي فيها <b>A</b> كمان (' + nab + '). <span class="en">P(A|B) = ' + nab + '/' + nb + '</span>' + (selA === selB ? ' ← نفس الحدث = 1' : '');
+  }
+  tw();
+
+  /* independence test */
+  function ind() {
+    var a = +$('iA').value, b = +$('iB').value, ab = +$('iAB').value, pr = a * b;
+    var cond = b > 0 ? ab / b : NaN, same = Math.abs(ab - pr) < 1e-9;
+    $('iRes').innerHTML =
+      '<div class="res"><small class="en plain">P(A)·P(B)</small><b>' + fmt(pr, 4) + '</b></div>' +
+      '<div class="res"><small class="en plain">P(A∩B)</small><b>' + fmt(ab, 4) + '</b></div>' +
+      '<div class="res"><small class="en plain">P(A|B)</small><b>' + (isFinite(cond) ? fmt(cond, 4) : '—') + '</b></div>' +
+      '<div class="res"><small class="en plain">P(A)</small><b>' + fmt(a, 4) + '</b></div>';
+    var v = $('iV');
+    if (ab > Math.min(a, b) + 1e-9) { v.className = 'verdict neg'; v.textContent = '⚠ P(A∩B) لازم ≤ الأصغر بين P(A) و P(B).'; return; }
+    v.className = 'verdict ' + (same ? 'pos' : 'neg');
+    v.innerHTML = same ? '✔ <b>مستقلين</b>: <span class="en">P(A∩B) = P(A)P(B)</span>.' : '✘ <b>مش مستقلين</b>: <span class="en">P(A∩B) ≠ P(A)P(B)</span>' + (ab === 0 && a > 0 && b > 0 ? ' — وده حالة <b>متنافيين</b> (احتمالهم موجب فمش مستقلين).' : '.');
+  }
+  ['iA', 'iB', 'iAB'].forEach(function (id) { $(id).addEventListener('input', ind); });
+  $('iPre').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; var v = b.dataset.v.split(','); $('iA').value = v[0]; $('iB').value = v[1]; $('iAB').value = v[2]; ind(); });
+  ind();
+
+  /* balls */
+  function balls() {
+    var w = Math.floor(+$('bW').value), k = Math.floor(+$('bK').value), N = w + k;
+    if (!(w >= 1) || !(k >= 0) || N < 3) { $('bRes').innerHTML = ''; $('bV').className = 'verdict neg'; $('bV').textContent = 'محتاج على الأقل 3 كرات و 1 بيضا.'; return; }
+    var r1 = Math.pow(w / N, 3), r2 = (w / N) * ((w - 1) / (N - 1)) * ((w - 2) / (N - 2)), r3 = (w / N) * (w / N) * ((w - 1) / (N - 1));
+    $('bRes').innerHTML =
+      '<div class="res"><small>(1) مع الإحلال</small><b>' + fmt(r1, 4) + '</b></div>' +
+      '<div class="res"><small>(2) بدون إحلال</small><b>' + fmt(r2, 4) + '</b></div>' +
+      '<div class="res"><small>(3) الأولى بس بترجع</small><b>' + fmt(r3, 4) + '</b></div>';
+    $('bV').className = 'verdict';
+    $('bV').innerHTML = '<span class="en">(1) (' + w + '/' + N + ')³ · (2) ' + w + '/' + N + '×' + (w - 1) + '/' + (N - 1) + '×' + (w - 2) + '/' + (N - 2) + ' · (3) ' + w + '/' + N + '×' + w + '/' + N + '×' + (w - 1) + '/' + (N - 1) + '</span>';
+  }
+  ['bW', 'bK'].forEach(function (id) { $(id).addEventListener('input', balls); }); balls();
+
+  /* Bayes table */
+  var bt = $('bt'), rows = [];
+  var head = '<tr><th></th><th>P(Aᵢ)</th><th>P(B|Aᵢ)</th><th>P(Aᵢ∩B)</th><th>P(Aᵢ|B)</th></tr>';
+  bt.innerHTML = head;
+  for (var i = 0; i < 4; i++) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>A' + (i + 1) + '</td><td><input type="number" step="0.01" min="0" max="1"></td><td><input type="number" step="0.01" min="0" max="1"></td><td class="j">—</td><td class="post">—</td>';
+    bt.appendChild(tr); rows.push(tr);
+  }
+  function bay() {
+    var p = [], l = [], j = [], tot = 0, sp = 0;
+    rows.forEach(function (tr, i) {
+      var inp = tr.querySelectorAll('input'); p[i] = +inp[0].value || 0; l[i] = +inp[1].value || 0; j[i] = p[i] * l[i]; tot += j[i]; sp += p[i];
+    });
+    rows.forEach(function (tr, i) { tr.querySelector('.j').textContent = fmt(j[i], 4); tr.querySelector('.post').textContent = tot > 0 ? fmt(j[i] / tot, 4) : '—'; });
+    $('bayRes').innerHTML =
+      '<div class="res"><small class="en plain">Σ P(Aᵢ)</small><b>' + fmt(sp, 3) + '</b></div>' +
+      '<div class="res pos"><small class="en plain">P(B) = Σ P(B|Aᵢ)P(Aᵢ)</small><b>' + fmt(tot, 4) + '</b></div>' +
+      '<div class="res"><small class="en plain">P(not A1 | B)</small><b>' + (tot > 0 ? fmt(1 - j[0] / tot, 4) : '—') + '</b></div>';
+    var v = $('bayV');
+    if (Math.abs(sp - 1) > 1e-6) { v.className = 'verdict neg'; v.innerHTML = '⚠ مجموع الـ <span class="en">P(Aᵢ)</span> لازم = 1 (تقسيم كامل). حاليًا ' + fmt(sp, 3) + '.'; }
+    else { v.className = 'verdict pos'; v.innerHTML = '✔ مجموع النسب = 1. ومجموع الـ <span class="en">P(Aᵢ|B)</span> = 1 كمان.'; }
+  }
+  rows.forEach(function (tr) { tr.addEventListener('input', bay); });
+  function setB(p, l) { rows.forEach(function (tr, i) { var inp = tr.querySelectorAll('input'); inp[0].value = p[i]; inp[1].value = l[i]; }); bay(); }
+  $('bPre').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; setB(b.dataset.p.split(','), b.dataset.l.split(',')); });
+  setB([0.4, 0.3, 0.2, 0.1], [0.18, 0.15, 0.12, 0.09]);
+})();
+</script>
+</body>
+</html>
